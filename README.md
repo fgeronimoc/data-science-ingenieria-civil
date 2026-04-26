@@ -62,6 +62,14 @@ La meta central es crear una nueva área dentro de la industria de la construcci
 
 ---
 
+## Proyectos publicados
+
+| Proyecto | Descripción | Ver en línea |
+|----------|-------------|--------------|
+| Riesgo Geoespacial — Sauco, La Libertad | Análisis de riesgo de huaicos, deslizamientos e inundaciones para proyecto de infraestructura en zona andina | [Ver mapa interactivo](https://fgeronimoc.github.io/data-science-ingenieria-civil/07_proyectos/riesgo_geoespacial/notebooks/mapa_analisis_proyecto_sauco.html) |
+
+---
+
 ## Cómo navegar este repositorio
 
 - Si eres nuevo en el proyecto → empieza por `00_roadmap/plan_estrategico.md`
