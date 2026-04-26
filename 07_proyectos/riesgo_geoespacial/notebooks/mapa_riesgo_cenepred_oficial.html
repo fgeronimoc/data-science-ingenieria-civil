@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_b38c17a60b0ef6c029de05448dbb4516 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_b38c17a60b0ef6c029de05448dbb4516" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_b38c17a60b0ef6c029de05448dbb4516 = L.map(
+                "map_b38c17a60b0ef6c029de05448dbb4516",
+                {
+                    center: [-8.018, -78.568],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 13,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_925f7b4962b806d7d6e9a9c192a08e45 = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_925f7b4962b806d7d6e9a9c192a08e45.addTo(map_b38c17a60b0ef6c029de05448dbb4516);
+        
+    
+            var macro_element_1bd5ba2f472495cd43750895199bb158 = L.tileLayer.wms(
+                "https://sigrid.cenepred.gob.pe/sigridv3/geoserver/ows?",
+                {"attribution": "", "format": "image/png", "layers": "sigrid:susceptibilidad_movimientos_masa", "opacity": 0.7, "styles": "", "transparent": true, "version": "1.1.1"}
+            );
+        
+    
+            macro_element_1bd5ba2f472495cd43750895199bb158.addTo(map_b38c17a60b0ef6c029de05448dbb4516);
+        
+    
+            var macro_element_3d184e96a66de858db3a70ebc66cb754 = L.tileLayer.wms(
+                "https://sigrid.cenepred.gob.pe/sigridv3/geoserver/ows?",
+                {"attribution": "", "format": "image/png", "layers": "sigrid:susceptibilidad_inundacion", "opacity": 0.7, "styles": "", "transparent": true, "version": "1.1.1"}
+            );
+        
+    
+            macro_element_3d184e96a66de858db3a70ebc66cb754.addTo(map_b38c17a60b0ef6c029de05448dbb4516);
+        
+    
+            var marker_e3026ddab175f71ff25f0156214e7978 = L.marker(
+                [-8.018, -78.568],
+                {
+}
+            ).addTo(map_b38c17a60b0ef6c029de05448dbb4516);
+        
+    
+            var icon_4ac147aecff3d41acc51a26dd29870f2 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "home",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_3883f078a042310518db8c253e00a7a9 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_9dd8d5e7caf8cfb97b061f7e63bd9874 = $(`<div id="html_9dd8d5e7caf8cfb97b061f7e63bd9874" style="width: 100.0%; height: 100.0%;"><b>🏗️ Proyecto Sauco — Salpo, Otuzco</b></div>`)[0];
+                popup_3883f078a042310518db8c253e00a7a9.setContent(html_9dd8d5e7caf8cfb97b061f7e63bd9874);
+            
+        
+
+        marker_e3026ddab175f71ff25f0156214e7978.bindPopup(popup_3883f078a042310518db8c253e00a7a9)
+        ;
+
+        
+    
+    
+            marker_e3026ddab175f71ff25f0156214e7978.bindTooltip(
+                `<div>
+                     PROYECTO: Sauco — Salpo
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_e3026ddab175f71ff25f0156214e7978.setIcon(icon_4ac147aecff3d41acc51a26dd29870f2);
+            
+    
+            var circle_2360624aa3cb726551f7ee0f9bfcbc99 = L.circle(
+                [-8.018, -78.568],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "blue", "fillOpacity": 0.05, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 2000, "stroke": true, "weight": 3}
+            ).addTo(map_b38c17a60b0ef6c029de05448dbb4516);
+        
+    
+            circle_2360624aa3cb726551f7ee0f9bfcbc99.bindTooltip(
+                `<div>
+                     Zona de influencia 2km
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var layer_control_a4c587b1a19b38960915821cfd91706e_layers = {
+                base_layers : {
+                    "cartodbpositron" : tile_layer_925f7b4962b806d7d6e9a9c192a08e45,
+                },
+                overlays :  {
+                    "CENEPRED \u2014 Movimientos en masa" : macro_element_1bd5ba2f472495cd43750895199bb158,
+                    "CENEPRED \u2014 Inundaciones" : macro_element_3d184e96a66de858db3a70ebc66cb754,
+                },
+            };
+            let layer_control_a4c587b1a19b38960915821cfd91706e = L.control.layers(
+                layer_control_a4c587b1a19b38960915821cfd91706e_layers.base_layers,
+                layer_control_a4c587b1a19b38960915821cfd91706e_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": true,
+  "autoZIndex": true,
+}
+            ).addTo(map_b38c17a60b0ef6c029de05448dbb4516);
+
+        
+</script>
+</html>

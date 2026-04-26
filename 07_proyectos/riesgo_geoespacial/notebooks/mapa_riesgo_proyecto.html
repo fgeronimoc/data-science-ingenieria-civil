@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_5be6c8459eb58cfdff87c9f13de90a6b {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+<div style="
+    position: fixed; bottom: 30px; left: 30px;
+    background-color: white; border: 2px solid grey;
+    border-radius: 8px; padding: 12px;
+    font-size: 13px; z-index: 1000;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.3);">
+    <b>Nivel de Riesgo</b><br>
+    <span style="color:red">●</span> Muy Alto<br>
+    <span style="color:orange">●</span> Alto<br>
+    <span style="color:#cccc00">●</span> Medio<br>
+    <hr style="margin:6px 0">
+    <span style="color:blue">⬤</span> Proyecto<br>
+    <span style="color:blue">○</span> Zona influencia 5km
+</div>
+    
+            <div class="folium-map" id="map_5be6c8459eb58cfdff87c9f13de90a6b" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_5be6c8459eb58cfdff87c9f13de90a6b = L.map(
+                "map_5be6c8459eb58cfdff87c9f13de90a6b",
+                {
+                    center: [-12.026, -76.9],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 12,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_12806c778f431ebf9fa19936943565ca = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_12806c778f431ebf9fa19936943565ca.addTo(map_5be6c8459eb58cfdff87c9f13de90a6b);
+        
+    
+            var feature_group_b7567e44b410263fce30beb7d334c340 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var circle_marker_c3cd5603fbf53386891c3d60f925f471 = L.circleMarker(
+                [-11.934, -76.697],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "red", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12, "stroke": true, "weight": 3}
+            ).addTo(feature_group_b7567e44b410263fce30beb7d334c340);
+        
+    
+        var popup_dfaf099444135fa7b436874abd51a6ba = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_29c7181700761e722a330a5bbd980309 = $(`<div id="html_29c7181700761e722a330a5bbd980309" style="width: 100.0%; height: 100.0%;"><b>Chosica - Quebrada Quirio</b><br>Tipo: Huaico<br>Nivel: <b>Muy Alto</b></div>`)[0];
+                popup_dfaf099444135fa7b436874abd51a6ba.setContent(html_29c7181700761e722a330a5bbd980309);
+            
+        
+
+        circle_marker_c3cd5603fbf53386891c3d60f925f471.bindPopup(popup_dfaf099444135fa7b436874abd51a6ba)
+        ;
+
+        
+    
+    
+            circle_marker_c3cd5603fbf53386891c3d60f925f471.bindTooltip(
+                `<div>
+                     Chosica - Quebrada Quirio — Muy Alto
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_2f87d3b1c1b55d82a9d340a5425df973 = L.circleMarker(
+                [-11.94, -76.7],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "red", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12, "stroke": true, "weight": 3}
+            ).addTo(feature_group_b7567e44b410263fce30beb7d334c340);
+        
+    
+        var popup_73b51e7b133e4be37fb12a9214df9210 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_9b3d4e0dcad529c4f80c670b16b9e6b1 = $(`<div id="html_9b3d4e0dcad529c4f80c670b16b9e6b1" style="width: 100.0%; height: 100.0%;"><b>Chosica - Quebrada Carossio</b><br>Tipo: Huaico<br>Nivel: <b>Muy Alto</b></div>`)[0];
+                popup_73b51e7b133e4be37fb12a9214df9210.setContent(html_9b3d4e0dcad529c4f80c670b16b9e6b1);
+            
+        
+
+        circle_marker_2f87d3b1c1b55d82a9d340a5425df973.bindPopup(popup_73b51e7b133e4be37fb12a9214df9210)
+        ;
+
+        
+    
+    
+            circle_marker_2f87d3b1c1b55d82a9d340a5425df973.bindTooltip(
+                `<div>
+                     Chosica - Quebrada Carossio — Muy Alto
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_eb029660d834abe8b01f01ee39bdc537 = L.circleMarker(
+                [-11.987, -76.82],
+                {"bubblingMouseEvents": true, "color": "orange", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "orange", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12, "stroke": true, "weight": 3}
+            ).addTo(feature_group_b7567e44b410263fce30beb7d334c340);
+        
+    
+        var popup_3d392f89ae2e23afcdce3c87c986c9ba = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_4928ecb65a3f163cafcb1831c04fd214 = $(`<div id="html_4928ecb65a3f163cafcb1831c04fd214" style="width: 100.0%; height: 100.0%;"><b>Carapongo</b><br>Tipo: Inundación<br>Nivel: <b>Alto</b></div>`)[0];
+                popup_3d392f89ae2e23afcdce3c87c986c9ba.setContent(html_4928ecb65a3f163cafcb1831c04fd214);
+            
+        
+
+        circle_marker_eb029660d834abe8b01f01ee39bdc537.bindPopup(popup_3d392f89ae2e23afcdce3c87c986c9ba)
+        ;
+
+        
+    
+    
+            circle_marker_eb029660d834abe8b01f01ee39bdc537.bindTooltip(
+                `<div>
+                     Carapongo — Alto
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_b2fa487e036fdc3ed3173de8199865e7 = L.circleMarker(
+                [-11.978, -76.768],
+                {"bubblingMouseEvents": true, "color": "orange", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "orange", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12, "stroke": true, "weight": 3}
+            ).addTo(feature_group_b7567e44b410263fce30beb7d334c340);
+        
+    
+        var popup_545a72fc79fbab88f0a1355b670438c6 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_4481d9d35c3e061731319383372f24e5 = $(`<div id="html_4481d9d35c3e061731319383372f24e5" style="width: 100.0%; height: 100.0%;"><b>Chaclacayo</b><br>Tipo: Huaico<br>Nivel: <b>Alto</b></div>`)[0];
+                popup_545a72fc79fbab88f0a1355b670438c6.setContent(html_4481d9d35c3e061731319383372f24e5);
+            
+        
+
+        circle_marker_b2fa487e036fdc3ed3173de8199865e7.bindPopup(popup_545a72fc79fbab88f0a1355b670438c6)
+        ;
+
+        
+    
+    
+            circle_marker_b2fa487e036fdc3ed3173de8199865e7.bindTooltip(
+                `<div>
+                     Chaclacayo — Alto
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_2431da70b3e942204411318997b8c885 = L.circleMarker(
+                [-11.957, -76.996],
+                {"bubblingMouseEvents": true, "color": "orange", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "orange", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12, "stroke": true, "weight": 3}
+            ).addTo(feature_group_b7567e44b410263fce30beb7d334c340);
+        
+    
+        var popup_2f5d79523b586255c82b694194d4444d = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_2dc7606ebba903adc8c2a17b39572c53 = $(`<div id="html_2dc7606ebba903adc8c2a17b39572c53" style="width: 100.0%; height: 100.0%;"><b>SJL - Quebrada Canto Grande</b><br>Tipo: Huaico<br>Nivel: <b>Alto</b></div>`)[0];
+                popup_2f5d79523b586255c82b694194d4444d.setContent(html_2dc7606ebba903adc8c2a17b39572c53);
+            
+        
+
+        circle_marker_2431da70b3e942204411318997b8c885.bindPopup(popup_2f5d79523b586255c82b694194d4444d)
+        ;
+
+        
+    
+    
+            circle_marker_2431da70b3e942204411318997b8c885.bindTooltip(
+                `<div>
+                     SJL - Quebrada Canto Grande — Alto
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_37a1e67e1aba7bc6032744f7fd68d8fc = L.circleMarker(
+                [-12.273, -76.872],
+                {"bubblingMouseEvents": true, "color": "yellow", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "yellow", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12, "stroke": true, "weight": 3}
+            ).addTo(feature_group_b7567e44b410263fce30beb7d334c340);
+        
+    
+        var popup_6af1838701ff9536094384b1a508e28a = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_d0dcc93c7cfe9cb042925f01418574cd = $(`<div id="html_d0dcc93c7cfe9cb042925f01418574cd" style="width: 100.0%; height: 100.0%;"><b>Lurín - Zona baja</b><br>Tipo: Inundación<br>Nivel: <b>Medio</b></div>`)[0];
+                popup_6af1838701ff9536094384b1a508e28a.setContent(html_d0dcc93c7cfe9cb042925f01418574cd);
+            
+        
+
+        circle_marker_37a1e67e1aba7bc6032744f7fd68d8fc.bindPopup(popup_6af1838701ff9536094384b1a508e28a)
+        ;
+
+        
+    
+    
+            circle_marker_37a1e67e1aba7bc6032744f7fd68d8fc.bindTooltip(
+                `<div>
+                     Lurín - Zona baja — Medio
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_22209ae25a48fd7a39233fc4fc6ba56d = L.circleMarker(
+                [-11.865, -77.073],
+                {"bubblingMouseEvents": true, "color": "orange", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "orange", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12, "stroke": true, "weight": 3}
+            ).addTo(feature_group_b7567e44b410263fce30beb7d334c340);
+        
+    
+        var popup_9c1c5d6b77ea40bb4d24145bdf0d1601 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_c3ffe7c127168ee4b298322c09b6df32 = $(`<div id="html_c3ffe7c127168ee4b298322c09b6df32" style="width: 100.0%; height: 100.0%;"><b>Chillón - Puente Piedra</b><br>Tipo: Inundación<br>Nivel: <b>Alto</b></div>`)[0];
+                popup_9c1c5d6b77ea40bb4d24145bdf0d1601.setContent(html_c3ffe7c127168ee4b298322c09b6df32);
+            
+        
+
+        circle_marker_22209ae25a48fd7a39233fc4fc6ba56d.bindPopup(popup_9c1c5d6b77ea40bb4d24145bdf0d1601)
+        ;
+
+        
+    
+    
+            circle_marker_22209ae25a48fd7a39233fc4fc6ba56d.bindTooltip(
+                `<div>
+                     Chillón - Puente Piedra — Alto
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_9b6a76489adbb3c9ae92db9649e3d4e4 = L.circleMarker(
+                [-12.026, -76.9],
+                {"bubblingMouseEvents": true, "color": "yellow", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "yellow", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12, "stroke": true, "weight": 3}
+            ).addTo(feature_group_b7567e44b410263fce30beb7d334c340);
+        
+    
+        var popup_5dc52ca9f135d267a5f262980c0247a1 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_dda0ac55d677a23bbc20ede8d82ae549 = $(`<div id="html_dda0ac55d677a23bbc20ede8d82ae549" style="width: 100.0%; height: 100.0%;"><b>Río Rímac - Ate</b><br>Tipo: Inundación<br>Nivel: <b>Medio</b></div>`)[0];
+                popup_5dc52ca9f135d267a5f262980c0247a1.setContent(html_dda0ac55d677a23bbc20ede8d82ae549);
+            
+        
+
+        circle_marker_9b6a76489adbb3c9ae92db9649e3d4e4.bindPopup(popup_5dc52ca9f135d267a5f262980c0247a1)
+        ;
+
+        
+    
+    
+            circle_marker_9b6a76489adbb3c9ae92db9649e3d4e4.bindTooltip(
+                `<div>
+                     Río Rímac - Ate — Medio
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_b7567e44b410263fce30beb7d334c340.addTo(map_5be6c8459eb58cfdff87c9f13de90a6b);
+        
+    
+            var feature_group_60d47e41e2a3caf428436f6457517115 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var poly_line_16d31601b0fcdb7e20044f50134b78b3 = L.polyline(
+                [[-11.934, -76.697], [-11.978, -76.768], [-12.026, -76.9], [-12.046, -77.02], [-12.055, -77.12]],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "blue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(feature_group_60d47e41e2a3caf428436f6457517115);
+        
+    
+            poly_line_16d31601b0fcdb7e20044f50134b78b3.bindTooltip(
+                `<div>
+                     Río Rímac
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var poly_line_29a35287db5baf09699befa75358effe = L.polyline(
+                [[-11.865, -77.073], [-11.9, -77.05], [-11.93, -77.02], [-11.97, -77.0]],
+                {"bubblingMouseEvents": true, "color": "cadetblue", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "cadetblue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(feature_group_60d47e41e2a3caf428436f6457517115);
+        
+    
+            poly_line_29a35287db5baf09699befa75358effe.bindTooltip(
+                `<div>
+                     Río Chillón
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var poly_line_4733eb1e20918b0cbbeb0486472efbaa = L.polyline(
+                [[-12.273, -76.872], [-12.22, -76.85], [-12.18, -76.83], [-12.15, -76.81]],
+                {"bubblingMouseEvents": true, "color": "darkblue", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "darkblue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(feature_group_60d47e41e2a3caf428436f6457517115);
+        
+    
+            poly_line_4733eb1e20918b0cbbeb0486472efbaa.bindTooltip(
+                `<div>
+                     Río Lurín
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_60d47e41e2a3caf428436f6457517115.addTo(map_5be6c8459eb58cfdff87c9f13de90a6b);
+        
+    
+            var feature_group_f021e9b4078a402d4c0e8eab72d01995 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var marker_1ea635a9a8d09148d0dd340963fb43be = L.marker(
+                [-12.026, -76.9],
+                {
+}
+            ).addTo(feature_group_f021e9b4078a402d4c0e8eab72d01995);
+        
+    
+            var icon_ca6cc2fbb8ec383dcc545f1e3c882c06 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "home",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_07af9d9c9f23c9afb1aaa5514df5c482 = L.popup({
+  "maxWidth": 250,
+});
+
+        
+            
+                var html_a13627e4751fa94eea5191d8e2112e9a = $(`<div id="html_a13627e4751fa94eea5191d8e2112e9a" style="width: 100.0%; height: 100.0%;">         <b>🏗️ Puente Río Rímac - Ate</b><br>         Tipo: Puente<br>         Longitud: 120 m<br>         <hr>         <b>Zonas de riesgo en 5km: 1</b>         </div>`)[0];
+                popup_07af9d9c9f23c9afb1aaa5514df5c482.setContent(html_a13627e4751fa94eea5191d8e2112e9a);
+            
+        
+
+        marker_1ea635a9a8d09148d0dd340963fb43be.bindPopup(popup_07af9d9c9f23c9afb1aaa5514df5c482)
+        ;
+
+        
+    
+    
+            marker_1ea635a9a8d09148d0dd340963fb43be.bindTooltip(
+                `<div>
+                     PROYECTO: Puente Río Rímac - Ate
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_1ea635a9a8d09148d0dd340963fb43be.setIcon(icon_ca6cc2fbb8ec383dcc545f1e3c882c06);
+            
+    
+            var circle_fb9d645633e5b83c99ac0ded9c1ea3e6 = L.circle(
+                [-12.026, -76.9],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "blue", "fillOpacity": 0.05, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5000, "stroke": true, "weight": 3}
+            ).addTo(feature_group_f021e9b4078a402d4c0e8eab72d01995);
+        
+    
+            circle_fb9d645633e5b83c99ac0ded9c1ea3e6.bindTooltip(
+                `<div>
+                     Zona de influencia 5km
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_f021e9b4078a402d4c0e8eab72d01995.addTo(map_5be6c8459eb58cfdff87c9f13de90a6b);
+        
+    
+            var layer_control_ff86fc1af758af2a7f1d893f995f0402_layers = {
+                base_layers : {
+                    "cartodbpositron" : tile_layer_12806c778f431ebf9fa19936943565ca,
+                },
+                overlays :  {
+                    "Zonas de Riesgo" : feature_group_b7567e44b410263fce30beb7d334c340,
+                    "R\u00edos principales" : feature_group_60d47e41e2a3caf428436f6457517115,
+                    "Proyecto de Infraestructura" : feature_group_f021e9b4078a402d4c0e8eab72d01995,
+                },
+            };
+            let layer_control_ff86fc1af758af2a7f1d893f995f0402 = L.control.layers(
+                layer_control_ff86fc1af758af2a7f1d893f995f0402_layers.base_layers,
+                layer_control_ff86fc1af758af2a7f1d893f995f0402_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": true,
+  "autoZIndex": true,
+}
+            ).addTo(map_5be6c8459eb58cfdff87c9f13de90a6b);
+
+        
+</script>
+</html>

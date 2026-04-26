@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_d97fdb97416736eb942d43bdb1654be9 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+<div style="
+    position: fixed; bottom: 30px; left: 30px;
+    background-color: white; border: 2px solid grey;
+    border-radius: 8px; padding: 12px;
+    font-size: 13px; z-index: 1000;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.3);">
+    <b>📍 Sauco — Salpo, La Libertad</b><br>
+    <i style="font-size:11px">Análisis de Riesgo Geoespacial</i>
+    <hr style="margin:6px 0">
+    <b>Nivel de Riesgo</b><br>
+    <span style="color:red">●</span> Muy Alto — Huaico/Deslizamiento<br>
+    <span style="color:orange">●</span> Alto<br>
+    <span style="color:#cccc00">●</span> Medio<br>
+    <hr style="margin:6px 0">
+    <span style="color:blue">⬤</span> Proyecto &nbsp;
+    <span style="color:blue">○</span> Zona influencia 2km<br>
+    <hr style="margin:6px 0">
+    <i style="font-size:10px">Fuente: CENEPRED, IGN — Abril 2026</i>
+</div>
+    
+            <div class="folium-map" id="map_d97fdb97416736eb942d43bdb1654be9" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_d97fdb97416736eb942d43bdb1654be9 = L.map(
+                "map_d97fdb97416736eb942d43bdb1654be9",
+                {
+                    center: [-8.018, -78.568],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 13,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_055cf176a5d269b254ba183d7685960c = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_055cf176a5d269b254ba183d7685960c.addTo(map_d97fdb97416736eb942d43bdb1654be9);
+        
+    
+            var tile_layer_a5d38f27a8087388fca0fdfe03968d04 = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Esri World Imagery",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_a5d38f27a8087388fca0fdfe03968d04.addTo(map_d97fdb97416736eb942d43bdb1654be9);
+        
+    
+            var tile_layer_e3ee591264f60d2d1370ee1542ec085c = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Esri World Topo",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_e3ee591264f60d2d1370ee1542ec085c.addTo(map_d97fdb97416736eb942d43bdb1654be9);
+        
+    
+            var feature_group_9005daf597f32decba6bfe01b33db957 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var circle_marker_f4dbba9281ea2c470f2a7dccf4b822cf = L.circleMarker(
+                [-8.01, -78.56],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "red", "fillOpacity": 0.75, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 14, "stroke": true, "weight": 3}
+            ).addTo(feature_group_9005daf597f32decba6bfe01b33db957);
+        
+    
+        var popup_98da9b07f2a2b97721fff2998737d583 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_94177db732f144de7b0bc4e72b6092f7 = $(`<div id="html_94177db732f144de7b0bc4e72b6092f7" style="width: 100.0%; height: 100.0%;"><b>Quebrada Salpo - Huaico</b><br>Tipo: Huaico<br>Nivel: <b>Muy Alto</b></div>`)[0];
+                popup_98da9b07f2a2b97721fff2998737d583.setContent(html_94177db732f144de7b0bc4e72b6092f7);
+            
+        
+
+        circle_marker_f4dbba9281ea2c470f2a7dccf4b822cf.bindPopup(popup_98da9b07f2a2b97721fff2998737d583)
+        ;
+
+        
+    
+    
+            circle_marker_f4dbba9281ea2c470f2a7dccf4b822cf.bindTooltip(
+                `<div>
+                     Quebrada Salpo - Huaico — Muy Alto
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_7d0eb35d71f2e973bd60f9c9df9fcc92 = L.circleMarker(
+                [-8.005, -78.572],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "red", "fillOpacity": 0.75, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 14, "stroke": true, "weight": 3}
+            ).addTo(feature_group_9005daf597f32decba6bfe01b33db957);
+        
+    
+        var popup_eff381d5512598fdcb832e6f8715c6ad = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_ef9e38c725ec7e1b185a12501bfb6dc7 = $(`<div id="html_ef9e38c725ec7e1b185a12501bfb6dc7" style="width: 100.0%; height: 100.0%;"><b>Ladera Norte Salpo</b><br>Tipo: Deslizamiento<br>Nivel: <b>Muy Alto</b></div>`)[0];
+                popup_eff381d5512598fdcb832e6f8715c6ad.setContent(html_ef9e38c725ec7e1b185a12501bfb6dc7);
+            
+        
+
+        circle_marker_7d0eb35d71f2e973bd60f9c9df9fcc92.bindPopup(popup_eff381d5512598fdcb832e6f8715c6ad)
+        ;
+
+        
+    
+    
+            circle_marker_7d0eb35d71f2e973bd60f9c9df9fcc92.bindTooltip(
+                `<div>
+                     Ladera Norte Salpo — Muy Alto
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_b0ca13b0edf9d547997e68b6db0c8f10 = L.circleMarker(
+                [-8.025, -78.55],
+                {"bubblingMouseEvents": true, "color": "orange", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "orange", "fillOpacity": 0.75, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 14, "stroke": true, "weight": 3}
+            ).addTo(feature_group_9005daf597f32decba6bfe01b33db957);
+        
+    
+        var popup_4baad307a89144cab78e45dfd3f35e37 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_7655b3335f4cd2324fd95a3bdfb384aa = $(`<div id="html_7655b3335f4cd2324fd95a3bdfb384aa" style="width: 100.0%; height: 100.0%;"><b>Quebrada tributaria Río Moche</b><br>Tipo: Huaico<br>Nivel: <b>Alto</b></div>`)[0];
+                popup_4baad307a89144cab78e45dfd3f35e37.setContent(html_7655b3335f4cd2324fd95a3bdfb384aa);
+            
+        
+
+        circle_marker_b0ca13b0edf9d547997e68b6db0c8f10.bindPopup(popup_4baad307a89144cab78e45dfd3f35e37)
+        ;
+
+        
+    
+    
+            circle_marker_b0ca13b0edf9d547997e68b6db0c8f10.bindTooltip(
+                `<div>
+                     Quebrada tributaria Río Moche — Alto
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_4568976166f0bae745d122b20322ae31 = L.circleMarker(
+                [-8.03, -78.58],
+                {"bubblingMouseEvents": true, "color": "orange", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "orange", "fillOpacity": 0.75, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 14, "stroke": true, "weight": 3}
+            ).addTo(feature_group_9005daf597f32decba6bfe01b33db957);
+        
+    
+        var popup_0c09d449d0e5d40a98ae1eab322b8761 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_6246f631c75ae9c3638873899a671817 = $(`<div id="html_6246f631c75ae9c3638873899a671817" style="width: 100.0%; height: 100.0%;"><b>Talud carretera Salpo-Otuzco</b><br>Tipo: Deslizamiento<br>Nivel: <b>Alto</b></div>`)[0];
+                popup_0c09d449d0e5d40a98ae1eab322b8761.setContent(html_6246f631c75ae9c3638873899a671817);
+            
+        
+
+        circle_marker_4568976166f0bae745d122b20322ae31.bindPopup(popup_0c09d449d0e5d40a98ae1eab322b8761)
+        ;
+
+        
+    
+    
+            circle_marker_4568976166f0bae745d122b20322ae31.bindTooltip(
+                `<div>
+                     Talud carretera Salpo-Otuzco — Alto
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_2a7e28ff31f111af717e6d7a2c280e5c = L.circleMarker(
+                [-8.022, -78.565],
+                {"bubblingMouseEvents": true, "color": "orange", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "orange", "fillOpacity": 0.75, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 14, "stroke": true, "weight": 3}
+            ).addTo(feature_group_9005daf597f32decba6bfe01b33db957);
+        
+    
+        var popup_5660e19fe519397e901a665af53b274e = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_0122cf77484ad2a5e92d8aedf0194eb7 = $(`<div id="html_0122cf77484ad2a5e92d8aedf0194eb7" style="width: 100.0%; height: 100.0%;"><b>Zona baja Sauco</b><br>Tipo: Inundación<br>Nivel: <b>Alto</b></div>`)[0];
+                popup_5660e19fe519397e901a665af53b274e.setContent(html_0122cf77484ad2a5e92d8aedf0194eb7);
+            
+        
+
+        circle_marker_2a7e28ff31f111af717e6d7a2c280e5c.bindPopup(popup_5660e19fe519397e901a665af53b274e)
+        ;
+
+        
+    
+    
+            circle_marker_2a7e28ff31f111af717e6d7a2c280e5c.bindTooltip(
+                `<div>
+                     Zona baja Sauco — Alto
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_de6d08250db0785b1714b21ed28f8c17 = L.circleMarker(
+                [-8.035, -78.558],
+                {"bubblingMouseEvents": true, "color": "beige", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "beige", "fillOpacity": 0.75, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 14, "stroke": true, "weight": 3}
+            ).addTo(feature_group_9005daf597f32decba6bfe01b33db957);
+        
+    
+        var popup_bd121c815eab64895961ca736106b359 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_85854cc845683e46cc991fff34964bd4 = $(`<div id="html_85854cc845683e46cc991fff34964bd4" style="width: 100.0%; height: 100.0%;"><b>Ladera Sur - Zona agrícola</b><br>Tipo: Deslizamiento<br>Nivel: <b>Medio</b></div>`)[0];
+                popup_bd121c815eab64895961ca736106b359.setContent(html_85854cc845683e46cc991fff34964bd4);
+            
+        
+
+        circle_marker_de6d08250db0785b1714b21ed28f8c17.bindPopup(popup_bd121c815eab64895961ca736106b359)
+        ;
+
+        
+    
+    
+            circle_marker_de6d08250db0785b1714b21ed28f8c17.bindTooltip(
+                `<div>
+                     Ladera Sur - Zona agrícola — Medio
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_0322a05d53b88f3d2ed5a3a79782fc5b = L.circleMarker(
+                [-8.015, -78.575],
+                {"bubblingMouseEvents": true, "color": "beige", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "beige", "fillOpacity": 0.75, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 14, "stroke": true, "weight": 3}
+            ).addTo(feature_group_9005daf597f32decba6bfe01b33db957);
+        
+    
+        var popup_ac630e4a5575a02edf758598fa00d227 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_9c7ebe84b83f4a5be5dd233b21206f69 = $(`<div id="html_9c7ebe84b83f4a5be5dd233b21206f69" style="width: 100.0%; height: 100.0%;"><b>Acceso vial principal</b><br>Tipo: Huaico<br>Nivel: <b>Medio</b></div>`)[0];
+                popup_ac630e4a5575a02edf758598fa00d227.setContent(html_9c7ebe84b83f4a5be5dd233b21206f69);
+            
+        
+
+        circle_marker_0322a05d53b88f3d2ed5a3a79782fc5b.bindPopup(popup_ac630e4a5575a02edf758598fa00d227)
+        ;
+
+        
+    
+    
+            circle_marker_0322a05d53b88f3d2ed5a3a79782fc5b.bindTooltip(
+                `<div>
+                     Acceso vial principal — Medio
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_9005daf597f32decba6bfe01b33db957.addTo(map_d97fdb97416736eb942d43bdb1654be9);
+        
+    
+            var feature_group_f74d79e2d48cbc26a2412a576699db69 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var marker_e7aa4f62c06f109d154a2f6961382c9f = L.marker(
+                [-8.018, -78.568],
+                {
+}
+            ).addTo(feature_group_f74d79e2d48cbc26a2412a576699db69);
+        
+    
+            var icon_4a51a4cfab93f6a0a853174635beaa41 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "home",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_bb946026e2df741209cb60aee7198279 = L.popup({
+  "maxWidth": 220,
+});
+
+        
+            
+                var html_1d49a76b3f1523287cfb6d384f866aa5 = $(`<div id="html_1d49a76b3f1523287cfb6d384f866aa5" style="width: 100.0%; height: 100.0%;"><b>🏗️ Proyecto Sauco — Salpo, Otuzco</b><br>Otuzco — La Libertad</div>`)[0];
+                popup_bb946026e2df741209cb60aee7198279.setContent(html_1d49a76b3f1523287cfb6d384f866aa5);
+            
+        
+
+        marker_e7aa4f62c06f109d154a2f6961382c9f.bindPopup(popup_bb946026e2df741209cb60aee7198279)
+        ;
+
+        
+    
+    
+            marker_e7aa4f62c06f109d154a2f6961382c9f.bindTooltip(
+                `<div>
+                     PROYECTO: Sauco — Salpo
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_e7aa4f62c06f109d154a2f6961382c9f.setIcon(icon_4a51a4cfab93f6a0a853174635beaa41);
+            
+    
+            var circle_709dce1294463fc62c39a0af726194ac = L.circle(
+                [-8.018, -78.568],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "blue", "fillOpacity": 0.08, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 2000, "stroke": true, "weight": 3}
+            ).addTo(feature_group_f74d79e2d48cbc26a2412a576699db69);
+        
+    
+            circle_709dce1294463fc62c39a0af726194ac.bindTooltip(
+                `<div>
+                     Zona de influencia 2km
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_f74d79e2d48cbc26a2412a576699db69.addTo(map_d97fdb97416736eb942d43bdb1654be9);
+        
+    
+            var layer_control_3d282335bd572c8399f294083fbb4c6e_layers = {
+                base_layers : {
+                    "openstreetmap" : tile_layer_055cf176a5d269b254ba183d7685960c,
+                    "Satelital" : tile_layer_a5d38f27a8087388fca0fdfe03968d04,
+                    "Topogr\u00e1fico" : tile_layer_e3ee591264f60d2d1370ee1542ec085c,
+                },
+                overlays :  {
+                    "Zonas de Riesgo" : feature_group_9005daf597f32decba6bfe01b33db957,
+                    "Proyecto Sauco" : feature_group_f74d79e2d48cbc26a2412a576699db69,
+                },
+            };
+            let layer_control_3d282335bd572c8399f294083fbb4c6e = L.control.layers(
+                layer_control_3d282335bd572c8399f294083fbb4c6e_layers.base_layers,
+                layer_control_3d282335bd572c8399f294083fbb4c6e_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": true,
+  "autoZIndex": true,
+}
+            ).addTo(map_d97fdb97416736eb942d43bdb1654be9);
+
+        
+</script>
+</html>
