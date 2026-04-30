@@ -41,6 +41,14 @@ except Exception as _dem_err:
     DEM_OK = False
     _dem_err_msg = str(_dem_err)
 
+# ── Módulo de susceptibilidad ─────────────────────────────────────────────────
+try:
+    import susceptibilidad as susc_mod
+    SUSC_OK = True
+except Exception as _susc_err:
+    SUSC_OK = False
+    _susc_err_msg = str(_susc_err)
+
 # =============================================================================
 # CONFIGURACIÓN DE PÁGINA
 # =============================================================================
@@ -428,12 +436,13 @@ st.markdown("---")
 # =============================================================================
 # TABS PRINCIPALES
 # =============================================================================
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "🗺️ Mapa Interactivo",
     "📊 Tabla de Estaciones",
     "🌧️ Análisis Climático",
     "📥 Exportar",
-    "⛰️ Análisis DEM"
+    "⛰️ Análisis DEM",
+    "🚨 Susceptibilidad"
 ])
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -921,3 +930,153 @@ with tab5:
                 folium.Marker([lat, lon], tooltip=nombre,
                               icon=folium.Icon(color="red")).add_to(mapa_simple)
                 st_folium(mapa_simple, width=None, height=480, returned_objects=[])
+
+# =============================================================================
+# TAB 6 — SUSCEPTIBILIDAD A DESLIZAMIENTOS
+# =============================================================================
+with tab6:
+    st.markdown("#### 🚨 Modelo de Susceptibilidad a Deslizamientos")
+    st.caption(
+        "Análisis multicriterio ponderado (WLC) basado en la metodología CENEPRED Perú. "
+        "Combina pendiente, precipitación, elevación y curvatura del terreno para "
+        "estimar zonas de riesgo ante movimientos en masa."
+    )
+
+    if not SUSC_OK:
+        st.error(f"❌ No se pudo cargar susceptibilidad.py: {_susc_err_msg}")
+    elif not DEM_OK or st.session_state.get("dem_resultado") is None:
+        st.warning(
+            "⚠️ Primero ejecuta el **Análisis DEM** en el tab ⛰️ para "
+            "generar el modelo de terreno que necesita este módulo."
+        )
+    else:
+        res_dem = st.session_state.dem_resultado
+        dem_data_susc = res_dem["dem_data"]
+
+        # ── Precipitación (de estación SENAMHI o manual) ─────────────────
+        st.markdown("##### Parámetros del modelo")
+        col_p1, col_p2 = st.columns([2, 3])
+        with col_p1:
+            precip_mm = st.number_input(
+                "Precipitación anual estimada (mm/año)",
+                min_value=50, max_value=5000, value=700, step=50,
+                help=(
+                    "Usa el dato de la estación SENAMHI más cercana. "
+                    "Referencia: Costa <300 mm | Sierra 500-1000 mm | "
+                    "Ceja de selva 1000-3000 mm | Selva >3000 mm"
+                )
+            )
+        with col_p2:
+            st.info(
+                f"📍 Estación más cercana: **{df.iloc[0]['nombre']}** "
+                f"({df.iloc[0]['tipo']}) — {df.iloc[0]['distancia_km']:.1f} km | "
+                f"Dpto: {df.iloc[0]['dpto']}",
+            )
+
+        # ── Pesos del modelo (avanzado) ───────────────────────────────────
+        with st.expander("⚙️ Ajustar pesos del modelo (avanzado)"):
+            st.markdown(
+                "Los pesos deben sumar **1.00**. "
+                "Valores por defecto según guía técnica CENEPRED."
+            )
+            cw1, cw2, cw3, cw4 = st.columns(4)
+            w_pend = cw1.slider("Pendiente",      0.10, 0.70, 0.40, 0.05)
+            w_prec = cw2.slider("Precipitación",  0.10, 0.50, 0.30, 0.05)
+            w_elev = cw3.slider("Elevación",      0.05, 0.35, 0.15, 0.05)
+            w_curv = cw4.slider("Curvatura",      0.05, 0.35, 0.15, 0.05)
+            suma_pesos = w_pend + w_prec + w_elev + w_curv
+            if abs(suma_pesos - 1.0) > 0.01:
+                st.warning(f"⚠️ Los pesos suman {suma_pesos:.2f} — deben sumar 1.00")
+            else:
+                st.success(f"✓ Pesos válidos (suma = {suma_pesos:.2f})")
+
+        btn_susc = st.button("🔍 Calcular Susceptibilidad", type="primary",
+                              use_container_width=True)
+
+        susc_key = f"{lat:.4f}_{lon:.4f}_{precip_mm}_{w_pend}_{w_prec}_{w_elev}_{w_curv}_{res_dem.get('fuente_dem','')}"
+        if "susc_key"      not in st.session_state: st.session_state.susc_key      = None
+        if "susc_resultado" not in st.session_state: st.session_state.susc_resultado = None
+
+        if btn_susc or st.session_state.susc_key != susc_key:
+            with st.spinner("Calculando índice de susceptibilidad..."):
+                try:
+                    res_susc = susc_mod.susceptibilidad_completo(
+                        dem_data=dem_data_susc,
+                        nombre_proyecto=nombre,
+                        precip_anual_mm=precip_mm,
+                        w_pendiente=w_pend,
+                        w_precip=w_prec,
+                        w_elevacion=w_elev,
+                        w_curvatura=w_curv,
+                    )
+                    st.session_state.susc_resultado = res_susc
+                    st.session_state.susc_key       = susc_key
+                except Exception as e_susc:
+                    st.error(f"Error: {e_susc}")
+                    st.session_state.susc_resultado = None
+
+        res_s = st.session_state.susc_resultado
+        if res_s is None:
+            st.info("Ajusta los parámetros y presiona **Calcular Susceptibilidad**.")
+        else:
+            susc_data = res_s["susc_data"]
+            stats_s   = susc_data["stats"]
+            clase_dom = max(stats_s, key=lambda k: stats_s[k]["porcentaje"])
+            color_dom = susc_mod.CLASES_SUSCEPTIBILIDAD[clase_dom]["color"]
+            area_alto = sum(stats_s[n]["area_km2"] for n in ["Alta", "Muy Alta"] if n in stats_s)
+
+            # ── Badge clase dominante ─────────────────────────────────────
+            st.markdown(
+                f'<span style="background:{color_dom};color:white;padding:4px 14px;'
+                f'border-radius:12px;font-size:13px;font-weight:bold">'
+                f'⚠️ Susceptibilidad Dominante: {clase_dom}</span>',
+                unsafe_allow_html=True
+            )
+            st.markdown("")
+
+            # ── Métricas ──────────────────────────────────────────────────
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("📊 Índice promedio",    f"{susc_data['indice_medio']:.2f} / 5.00")
+            m2.metric("🔴 Área Alta+Muy Alta",  f"{area_alto:.2f} km²")
+            m3.metric("🌧️ Precipitación usada", f"{precip_mm} mm/año")
+            m4.metric("📐 Pendiente factor",    f"{susc_data['factores']['pendiente'].mean():.2f} / 5")
+
+            st.markdown("---")
+
+            # ── Figura matplotlib ─────────────────────────────────────────
+            st.markdown("##### Análisis completo")
+            fig_susc = res_s["figura"]
+            if fig_susc:
+                st.pyplot(fig_susc, use_container_width=True)
+
+            st.markdown("---")
+
+            # ── Mapa Folium ───────────────────────────────────────────────
+            st.markdown("##### Mapa interactivo de susceptibilidad")
+            mapa_susc = res_s["mapa"]
+            if mapa_susc:
+                from streamlit_folium import st_folium
+                st_folium(mapa_susc, width=None, height=500, returned_objects=[])
+
+                mapa_susc_html = mapa_susc._repr_html_()
+                st.download_button(
+                    "⬇️ Descargar Mapa Susceptibilidad (HTML)",
+                    data=mapa_susc_html,
+                    file_name=f"susceptibilidad_{nombre.lower().replace(' ','_')}.html",
+                    mime="text/html"
+                )
+
+            st.markdown("---")
+            st.markdown("##### Interpretación técnica")
+            st.markdown(f"""
+| Factor | Peso | Justificación |
+|--------|------|---------------|
+| Pendiente | {w_pend*100:.0f}% | Factor geomorfológico dominante en movimientos en masa |
+| Precipitación | {w_prec*100:.0f}% | Detonante principal: satura el suelo y reduce cohesión |
+| Elevación | {w_elev*100:.0f}% | Contexto altitudinal, permafrost y ciclos hielo-deshielo |
+| Curvatura | {w_curv*100:.0f}% | Zonas cóncavas concentran flujo hídrico |
+
+**Clase dominante: {clase_dom}** — Índice promedio {susc_data['indice_medio']:.2f}/5.00
+
+> Ref: CENEPRED — *Manual para la Evaluación de Riesgos originados por Movimientos en Masa*, 2da edición.
+            """)
