@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscador Estaciones SENAMHI — Perú</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── PANEL LATERAL IZQUIERDO ── */
+  #sidebar {
+    width: 320px;
+    min-width: 320px;
+    background: #f8f9fa;
+    border-right: 2px solid #dee2e6;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    z-index: 500;
+  }
+  #sidebar-header {
+    background: linear-gradient(135deg, #1A5276, #2980B9);
+    color: white;
+    padding: 14px 16px;
+    font-size: 15px;
+    font-weight: bold;
+  }
+  #sidebar-header small {
+    display: block;
+    font-size: 11px;
+    font-weight: normal;
+    opacity: 0.85;
+    margin-top: 3px;
+  }
+
+  /* ── TABS GEO / UTM ── */
+  .tab-buttons {
+    display: flex;
+    border-bottom: 2px solid #dee2e6;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 9px;
+    border: none;
+    background: #e9ecef;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+    color: #495057;
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: white;
+    color: #1A5276;
+    border-bottom: 3px solid #1A5276;
+  }
+  .tab-content { display: none; padding: 14px; }
+  .tab-content.active { display: block; }
+
+  label { font-size: 12px; color: #495057; font-weight: bold; display: block; margin-bottom: 3px; }
+  input[type=number], select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    font-size: 13px;
+    margin-bottom: 10px;
+    color: #212529;
+    background: white;
+  }
+  input[type=number]:focus, select:focus {
+    outline: none;
+    border-color: #2980B9;
+    box-shadow: 0 0 0 2px rgba(41,128,185,0.2);
+  }
+
+  #btn-buscar {
+    width: 100%;
+    padding: 10px;
+    background: #1A5276;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 2px;
+  }
+  #btn-buscar:hover { background: #2980B9; }
+
+  /* ── RESULTADOS ── */
+  #results-section {
+    padding: 12px 14px;
+    border-top: 2px solid #dee2e6;
+    flex: 1;
+  }
+  #results-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #1A5276;
+    margin-bottom: 8px;
+  }
+  #results-list { list-style: none; }
+  #results-list li {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-left: 5px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    padding: 9px 11px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: box-shadow 0.15s;
+  }
+  #results-list li:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .est-rank { font-weight: bold; font-size: 14px; }
+  .est-name { font-weight: bold; font-size: 13px; color: #212529; }
+  .est-meta { color: #6c757d; font-size: 11px; margin-top: 2px; }
+  .est-dist { font-size: 13px; font-weight: bold; float: right; margin-top: -18px; }
+  #coords-result {
+    background: #EBF5FB;
+    border: 1px solid #AED6F1;
+    border-radius: 5px;
+    padding: 8px 10px;
+    font-size: 11px;
+    color: #1A5276;
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+  #error-msg {
+    background: #FDEDEC;
+    border: 1px solid #E74C3C;
+    border-radius: 5px;
+    padding: 8px 10px;
+    font-size: 12px;
+    color: #C0392B;
+    margin-bottom: 8px;
+    display: none;
+  }
+
+  /* ── MAPA ── */
+  #map { flex: 1; height: 100vh; }
+
+  /* Control de capas — posición top-right por defecto de Leaflet, sin superposición */
+  .leaflet-top.leaflet-right { top: 10px; right: 10px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ PANEL IZQUIERDO ═══════════════════════ -->
+<div id="sidebar">
+  <div id="sidebar-header">
+    🌦️ Buscador de Estaciones SENAMHI
+    <small>Perú — 148 estaciones activas</small>
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-buttons">
+    <button class="tab-btn active" onclick="switchTab('geo')">🌐 Geográficas</button>
+    <button class="tab-btn"        onclick="switchTab('utm')">📐 UTM</button>
+  </div>
+
+  <!-- TAB GEOGRÁFICAS -->
+  <div id="tab-geo" class="tab-content active">
+    <label>Latitud (decimal, negativo = Sur)</label>
+    <input type="number" id="geo-lat" step="0.000001" placeholder="Ej: -8.018000" value="-8.018">
+    <label>Longitud (decimal, negativo = Oeste)</label>
+    <input type="number" id="geo-lon" step="0.000001" placeholder="Ej: -78.568000" value="-78.568">
+    <label>Nombre del proyecto</label>
+    <input type="text"   id="geo-nombre" placeholder="Ej: Proyecto Sauco" value="Proyecto Sauco" style="margin-bottom:10px; padding:8px 10px; border:1px solid #ced4da; border-radius:5px; font-size:13px; width:100%;">
+  </div>
+
+  <!-- TAB UTM -->
+  <div id="tab-utm" class="tab-content">
+    <label>Zona UTM (Perú: 17, 18 o 19)</label>
+    <select id="utm-zona">
+      <option value="17">Zona 17S — Piura, Tumbes, sierra norte</option>
+      <option value="18" selected>Zona 18S — Lima, Cusco, Puno (mayoría)</option>
+      <option value="19">Zona 19S — Extremo este de Madre de Dios</option>
+    </select>
+    <label>Este / Easting (metros)</label>
+    <input type="number" id="utm-este"  step="1" placeholder="Ej: 768071" value="768071">
+    <label>Norte / Northing (metros)</label>
+    <input type="number" id="utm-norte" step="1" placeholder="Ej: 9112918" value="9112918">
+    <label>Nombre del proyecto</label>
+    <input type="text"   id="utm-nombre" placeholder="Ej: Mi Proyecto" value="Proyecto Sauco (UTM)" style="margin-bottom:10px; padding:8px 10px; border:1px solid #ced4da; border-radius:5px; font-size:13px; width:100%;">
+    <div style="font-size:10px; color:#888; margin-bottom:8px;">
+      ℹ️ Hemisferio Sur (S) — WGS84. El sistema detecta la zona automáticamente.
+    </div>
+  </div>
+
+  <div style="padding: 0 14px 10px 14px;">
+    <button id="btn-buscar" onclick="buscar()">🔍 Buscar estaciones más cercanas</button>
+  </div>
+
+  <!-- ERROR -->
+  <div id="error-msg" style="margin: 0 14px;"></div>
+
+  <!-- RESULTADOS -->
+  <div id="results-section" style="display:none;">
+    <div id="coords-result"></div>
+    <div id="results-title">📍 5 Estaciones activas más cercanas:</div>
+    <ul id="results-list"></ul>
+    <div style="font-size:10px; color:#aaa; margin-top:6px;">
+      ✅ Solo estaciones activas | Fuente: SENAMHI — Perú
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MAPA ═══════════════════════ -->
+<div id="map"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CATÁLOGO DE ESTACIONES SENAMHI (embebido)
+// ══════════════════════════════════════════════════════
+const ESTACIONES = [{"codigo": "000401", "nombre": "Otuzco", "tipo": "CO", "dpto": "La Libertad", "prov": "Otuzco", "dist": "Otuzco", "lat": -7.897, "lon": -78.575, "elev": 2641, "activa": true}, {"codigo": "000402", "nombre": "Julcan", "tipo": "CO", "dpto": "La Libertad", "prov": "Julcan", "dist": "Julcan", "lat": -8.042, "lon": -78.5, "elev": 3445, "activa": true}, {"codigo": "000403", "nombre": "Huamachuco", "tipo": "CP", "dpto": "La Libertad", "prov": "Sanchez Carrion", "dist": "Huamachuco", "lat": -7.817, "lon": -78.05, "elev": 3163, "activa": true}, {"codigo": "000404", "nombre": "Santiago de Chuco", "tipo": "CO", "dpto": "La Libertad", "prov": "Santiago de Chuco", "dist": "Santiago de Chuco", "lat": -8.142, "lon": -78.167, "elev": 3060, "activa": true}, {"codigo": "000405", "nombre": "Quiruvilca", "tipo": "CO", "dpto": "La Libertad", "prov": "Santiago de Chuco", "dist": "Quiruvilca", "lat": -7.983, "lon": -78.317, "elev": 3965, "activa": true}, {"codigo": "000406", "nombre": "Salpo", "tipo": "PLU", "dpto": "La Libertad", "prov": "Otuzco", "dist": "Salpo", "lat": -8.017, "lon": -78.583, "elev": 3030, "activa": true}, {"codigo": "000407", "nombre": "Mollepata", "tipo": "PLU", "dpto": "La Libertad", "prov": "Otuzco", "dist": "Mollepata", "lat": -7.95, "lon": -78.6, "elev": 2700, "activa": true}, {"codigo": "000408", "nombre": "Charat", "tipo": "PLU", "dpto": "La Libertad", "prov": "Otuzco", "dist": "Charat", "lat": -7.917, "lon": -78.617, "elev": 1700, "activa": true}, {"codigo": "000409", "nombre": "Trujillo", "tipo": "CP", "dpto": "La Libertad", "prov": "Trujillo", "dist": "Trujillo", "lat": -8.083, "lon": -79.033, "elev": 15, "activa": true}, {"codigo": "000410", "nombre": "Secsecpampa", "tipo": "PLU", "dpto": "La Libertad", "prov": "Otuzco", "dist": "Agallpampa", "lat": -7.967, "lon": -78.483, "elev": 3350, "activa": true}, {"codigo": "000411", "nombre": "Shorey", "tipo": "CO", "dpto": "La Libertad", "prov": "Santiago de Chuco", "dist": "Sitabamba", "lat": -8.217, "lon": -78.017, "elev": 3280, "activa": true}, {"codigo": "000412", "nombre": "Chao", "tipo": "PLU", "dpto": "La Libertad", "prov": "Viru", "dist": "Chao", "lat": -8.567, "lon": -78.75, "elev": 85, "activa": true}, {"codigo": "000501", "nombre": "Cajamarca", "tipo": "CP", "dpto": "Cajamarca", "prov": "Cajamarca", "dist": "Cajamarca", "lat": -7.15, "lon": -78.5, "elev": 2682, "activa": true}, {"codigo": "000502", "nombre": "Bambamarca", "tipo": "CO", "dpto": "Cajamarca", "prov": "Hualgayoc", "dist": "Bambamarca", "lat": -6.683, "lon": -78.517, "elev": 2532, "activa": true}, {"codigo": "000503", "nombre": "Celendin", "tipo": "CO", "dpto": "Cajamarca", "prov": "Celendin", "dist": "Celendin", "lat": -6.867, "lon": -78.15, "elev": 2625, "activa": true}, {"codigo": "000504", "nombre": "Contumaza", "tipo": "CO", "dpto": "Cajamarca", "prov": "Contumaza", "dist": "Contumaza", "lat": -7.367, "lon": -78.917, "elev": 2650, "activa": true}, {"codigo": "000505", "nombre": "San Pablo", "tipo": "CO", "dpto": "Cajamarca", "prov": "San Pablo", "dist": "San Pablo", "lat": -7.117, "lon": -78.833, "elev": 2340, "activa": true}, {"codigo": "000506", "nombre": "Chota", "tipo": "CP", "dpto": "Cajamarca", "prov": "Chota", "dist": "Chota", "lat": -6.55, "lon": -78.65, "elev": 2388, "activa": true}, {"codigo": "000507", "nombre": "Cutervo", "tipo": "CO", "dpto": "Cajamarca", "prov": "Cutervo", "dist": "Cutervo", "lat": -6.367, "lon": -78.817, "elev": 2640, "activa": true}, {"codigo": "000508", "nombre": "Jaen", "tipo": "CP", "dpto": "Cajamarca", "prov": "Jaen", "dist": "Jaen", "lat": -5.7, "lon": -78.8, "elev": 729, "activa": true}, {"codigo": "000509", "nombre": "San Ignacio", "tipo": "CO", "dpto": "Cajamarca", "prov": "San Ignacio", "dist": "San Ignacio", "lat": -5.133, "lon": -79.0, "elev": 1325, "activa": true}, {"codigo": "000510", "nombre": "San Marcos", "tipo": "CO", "dpto": "Cajamarca", "prov": "San Marcos", "dist": "San Marcos", "lat": -7.317, "lon": -78.167, "elev": 2262, "activa": true}, {"codigo": "000511", "nombre": "Weberbauer", "tipo": "CO", "dpto": "Cajamarca", "prov": "Cajamarca", "dist": "Cajamarca", "lat": -7.168, "lon": -78.491, "elev": 2682, "activa": true}, {"codigo": "000512", "nombre": "Santa Cruz", "tipo": "CO", "dpto": "Cajamarca", "prov": "Santa Cruz", "dist": "Santa Cruz", "lat": -6.65, "lon": -78.983, "elev": 2038, "activa": true}, {"codigo": "000601", "nombre": "Piura", "tipo": "CP", "dpto": "Piura", "prov": "Piura", "dist": "Piura", "lat": -5.183, "lon": -80.617, "elev": 29, "activa": true}, {"codigo": "000602", "nombre": "Chulucanas", "tipo": "CO", "dpto": "Piura", "prov": "Morropon", "dist": "Chulucanas", "lat": -5.1, "lon": -80.167, "elev": 92, "activa": true}, {"codigo": "000603", "nombre": "Huancabamba", "tipo": "CO", "dpto": "Piura", "prov": "Huancabamba", "dist": "Huancabamba", "lat": -5.233, "lon": -79.45, "elev": 1957, "activa": true}, {"codigo": "000604", "nombre": "Ayabaca", "tipo": "CO", "dpto": "Piura", "prov": "Ayabaca", "dist": "Ayabaca", "lat": -4.633, "lon": -79.717, "elev": 2715, "activa": true}, {"codigo": "000605", "nombre": "Talara", "tipo": "CO", "dpto": "Piura", "prov": "Talara", "dist": "Pariñas", "lat": -4.583, "lon": -81.267, "elev": 8, "activa": true}, {"codigo": "000606", "nombre": "Sullana", "tipo": "CO", "dpto": "Piura", "prov": "Sullana", "dist": "Sullana", "lat": -4.9, "lon": -80.683, "elev": 52, "activa": true}, {"codigo": "000607", "nombre": "Mancora", "tipo": "PLU", "dpto": "Piura", "prov": "Talara", "dist": "Mancora", "lat": -4.1, "lon": -81.033, "elev": 5, "activa": true}, {"codigo": "000608", "nombre": "La Esperanza", "tipo": "CO", "dpto": "Piura", "prov": "Piura", "dist": "Tambo Grande", "lat": -4.917, "lon": -80.333, "elev": 102, "activa": true}, {"codigo": "000701", "nombre": "Lambayeque", "tipo": "CO", "dpto": "Lambayeque", "prov": "Lambayeque", "dist": "Lambayeque", "lat": -6.7, "lon": -79.9, "elev": 18, "activa": true}, {"codigo": "000702", "nombre": "Chiclayo", "tipo": "CP", "dpto": "Lambayeque", "prov": "Chiclayo", "dist": "Chiclayo", "lat": -6.817, "lon": -79.833, "elev": 27, "activa": true}, {"codigo": "000703", "nombre": "Ferrenafe", "tipo": "CO", "dpto": "Lambayeque", "prov": "Ferrenafe", "dist": "Ferrenafe", "lat": -6.633, "lon": -79.783, "elev": 55, "activa": true}, {"codigo": "000704", "nombre": "Incahuasi", "tipo": "CO", "dpto": "Lambayeque", "prov": "Ferrenafe", "dist": "Incahuasi", "lat": -6.233, "lon": -79.3, "elev": 3078, "activa": true}, {"codigo": "000705", "nombre": "Cayalti", "tipo": "PLU", "dpto": "Lambayeque", "prov": "Chiclayo", "dist": "Cayalti", "lat": -6.9, "lon": -79.583, "elev": 55, "activa": true}, {"codigo": "000801", "nombre": "Huaraz", "tipo": "CP", "dpto": "Ancash", "prov": "Huaraz", "dist": "Huaraz", "lat": -9.533, "lon": -77.533, "elev": 3052, "activa": true}, {"codigo": "000802", "nombre": "Recuay", "tipo": "CO", "dpto": "Ancash", "prov": "Recuay", "dist": "Recuay", "lat": -9.717, "lon": -77.467, "elev": 3394, "activa": true}, {"codigo": "000803", "nombre": "Carhuaz", "tipo": "CO", "dpto": "Ancash", "prov": "Carhuaz", "dist": "Carhuaz", "lat": -9.283, "lon": -77.65, "elev": 2638, "activa": true}, {"codigo": "000804", "nombre": "Caraz", "tipo": "CO", "dpto": "Ancash", "prov": "Huaylas", "dist": "Caraz", "lat": -9.05, "lon": -77.817, "elev": 2285, "activa": true}, {"codigo": "000805", "nombre": "Chimbote", "tipo": "CP", "dpto": "Ancash", "prov": "Santa", "dist": "Chimbote", "lat": -9.067, "lon": -78.6, "elev": 4, "activa": true}, {"codigo": "000806", "nombre": "Pomabamba", "tipo": "CO", "dpto": "Ancash", "prov": "Pomabamba", "dist": "Pomabamba", "lat": -8.833, "lon": -77.467, "elev": 2985, "activa": true}, {"codigo": "000807", "nombre": "Sihuas", "tipo": "CO", "dpto": "Ancash", "prov": "Sihuas", "dist": "Sihuas", "lat": -8.567, "lon": -77.65, "elev": 2716, "activa": true}, {"codigo": "000808", "nombre": "Yungay", "tipo": "CO", "dpto": "Ancash", "prov": "Yungay", "dist": "Yungay", "lat": -9.133, "lon": -77.75, "elev": 2490, "activa": true}, {"codigo": "000809", "nombre": "Llanganuco", "tipo": "PLU", "dpto": "Ancash", "prov": "Yungay", "dist": "Yungay", "lat": -9.033, "lon": -77.6, "elev": 3850, "activa": true}, {"codigo": "000810", "nombre": "Casma", "tipo": "CO", "dpto": "Ancash", "prov": "Casma", "dist": "Casma", "lat": -9.467, "lon": -78.317, "elev": 6, "activa": true}, {"codigo": "000901", "nombre": "Lima CORPAC", "tipo": "CP", "dpto": "Lima", "prov": "Lima", "dist": "Miraflores", "lat": -12.017, "lon": -77.117, "elev": 13, "activa": true}, {"codigo": "000902", "nombre": "La Molina", "tipo": "CO", "dpto": "Lima", "prov": "Lima", "dist": "La Molina", "lat": -12.083, "lon": -76.95, "elev": 238, "activa": true}, {"codigo": "000903", "nombre": "Chosica", "tipo": "CO", "dpto": "Lima", "prov": "Lima", "dist": "Lurigancho", "lat": -11.933, "lon": -76.7, "elev": 855, "activa": true}, {"codigo": "000904", "nombre": "Huacho", "tipo": "CO", "dpto": "Lima", "prov": "Huaura", "dist": "Huacho", "lat": -11.1, "lon": -77.6, "elev": 5, "activa": true}, {"codigo": "000905", "nombre": "Barranca", "tipo": "CO", "dpto": "Lima", "prov": "Barranca", "dist": "Barranca", "lat": -10.767, "lon": -77.767, "elev": 50, "activa": true}, {"codigo": "000906", "nombre": "Cañete", "tipo": "CO", "dpto": "Lima", "prov": "Cañete", "dist": "San Vicente", "lat": -13.083, "lon": -76.367, "elev": 155, "activa": true}, {"codigo": "000907", "nombre": "Matucana", "tipo": "CO", "dpto": "Lima", "prov": "Huarochiri", "dist": "Matucana", "lat": -11.833, "lon": -76.383, "elev": 2378, "activa": true}, {"codigo": "000908", "nombre": "Huangascar", "tipo": "PLU", "dpto": "Lima", "prov": "Yauyos", "dist": "Huangascar", "lat": -12.85, "lon": -75.783, "elev": 2160, "activa": true}, {"codigo": "000909", "nombre": "San Jose", "tipo": "PLU", "dpto": "Lima", "prov": "Huaura", "dist": "Santa Maria", "lat": -11.083, "lon": -77.55, "elev": 6, "activa": true}, {"codigo": "000910", "nombre": "Arahuay", "tipo": "PLU", "dpto": "Lima", "prov": "Canta", "dist": "Arahuay", "lat": -11.617, "lon": -76.833, "elev": 2800, "activa": true}, {"codigo": "001001", "nombre": "Huancayo", "tipo": "CP", "dpto": "Junin", "prov": "Huancayo", "dist": "El Tambo", "lat": -12.067, "lon": -75.217, "elev": 3313, "activa": true}, {"codigo": "001002", "nombre": "Tarma", "tipo": "CO", "dpto": "Junin", "prov": "Tarma", "dist": "Tarma", "lat": -11.417, "lon": -75.683, "elev": 3050, "activa": true}, {"codigo": "001003", "nombre": "Junin", "tipo": "CO", "dpto": "Junin", "prov": "Junin", "dist": "Junin", "lat": -11.167, "lon": -76.0, "elev": 4100, "activa": true}, {"codigo": "001004", "nombre": "Jauja", "tipo": "CO", "dpto": "Junin", "prov": "Jauja", "dist": "Jauja", "lat": -11.767, "lon": -75.5, "elev": 3321, "activa": true}, {"codigo": "001005", "nombre": "La Oroya", "tipo": "CO", "dpto": "Junin", "prov": "Yauli", "dist": "La Oroya", "lat": -11.533, "lon": -75.9, "elev": 3728, "activa": true}, {"codigo": "001006", "nombre": "Satipo", "tipo": "CO", "dpto": "Junin", "prov": "Satipo", "dist": "Satipo", "lat": -11.25, "lon": -74.633, "elev": 585, "activa": true}, {"codigo": "001007", "nombre": "Mazamari", "tipo": "PLU", "dpto": "Junin", "prov": "Satipo", "dist": "Mazamari", "lat": -11.317, "lon": -74.533, "elev": 763, "activa": true}, {"codigo": "001008", "nombre": "Chanchamayo", "tipo": "CO", "dpto": "Junin", "prov": "Chanchamayo", "dist": "San Ramon", "lat": -11.067, "lon": -75.317, "elev": 1350, "activa": true}, {"codigo": "001101", "nombre": "Ayacucho", "tipo": "CP", "dpto": "Ayacucho", "prov": "Huamanga", "dist": "Ayacucho", "lat": -13.167, "lon": -74.217, "elev": 2761, "activa": true}, {"codigo": "001102", "nombre": "Huanta", "tipo": "CO", "dpto": "Ayacucho", "prov": "Huanta", "dist": "Huanta", "lat": -12.933, "lon": -74.25, "elev": 2677, "activa": true}, {"codigo": "001103", "nombre": "Puquio", "tipo": "CO", "dpto": "Ayacucho", "prov": "Lucanas", "dist": "Puquio", "lat": -14.7, "lon": -74.133, "elev": 3195, "activa": true}, {"codigo": "001104", "nombre": "Cora Cora", "tipo": "CO", "dpto": "Ayacucho", "prov": "Parinacochas", "dist": "Coracora", "lat": -15.033, "lon": -73.783, "elev": 3173, "activa": true}, {"codigo": "001105", "nombre": "Vilcashuaman", "tipo": "PLU", "dpto": "Ayacucho", "prov": "Vilcas Huaman", "dist": "Vilcas Huaman", "lat": -13.667, "lon": -73.95, "elev": 3450, "activa": true}, {"codigo": "001201", "nombre": "Cusco", "tipo": "CP", "dpto": "Cusco", "prov": "Cusco", "dist": "Cusco", "lat": -13.533, "lon": -71.967, "elev": 3399, "activa": true}, {"codigo": "001202", "nombre": "Pisac", "tipo": "CO", "dpto": "Cusco", "prov": "Calca", "dist": "Pisac", "lat": -13.417, "lon": -71.85, "elev": 2975, "activa": true}, {"codigo": "001203", "nombre": "Sicuani", "tipo": "CO", "dpto": "Cusco", "prov": "Canchis", "dist": "Sicuani", "lat": -14.267, "lon": -71.233, "elev": 3574, "activa": true}, {"codigo": "001204", "nombre": "Espinar", "tipo": "CO", "dpto": "Cusco", "prov": "Espinar", "dist": "Espinar", "lat": -14.783, "lon": -71.4, "elev": 3927, "activa": true}, {"codigo": "001205", "nombre": "Quillabamba", "tipo": "CO", "dpto": "Cusco", "prov": "La Convencion", "dist": "Santa Ana", "lat": -12.85, "lon": -72.7, "elev": 1050, "activa": true}, {"codigo": "001206", "nombre": "Machu Picchu", "tipo": "CP", "dpto": "Cusco", "prov": "Urubamba", "dist": "Machu Picchu", "lat": -13.167, "lon": -72.533, "elev": 2400, "activa": true}, {"codigo": "001207", "nombre": "Urubamba", "tipo": "CO", "dpto": "Cusco", "prov": "Urubamba", "dist": "Urubamba", "lat": -13.317, "lon": -72.117, "elev": 2871, "activa": true}, {"codigo": "001208", "nombre": "Calca", "tipo": "PLU", "dpto": "Cusco", "prov": "Calca", "dist": "Calca", "lat": -13.333, "lon": -71.967, "elev": 2928, "activa": true}, {"codigo": "001209", "nombre": "Granja Kcayra", "tipo": "CO", "dpto": "Cusco", "prov": "Cusco", "dist": "San Jeronimo", "lat": -13.55, "lon": -71.883, "elev": 3219, "activa": true}, {"codigo": "001301", "nombre": "Puno", "tipo": "CP", "dpto": "Puno", "prov": "Puno", "dist": "Puno", "lat": -15.817, "lon": -70.017, "elev": 3812, "activa": true}, {"codigo": "001302", "nombre": "Juliaca", "tipo": "CO", "dpto": "Puno", "prov": "San Roman", "dist": "Juliaca", "lat": -15.467, "lon": -70.183, "elev": 3825, "activa": true}, {"codigo": "001303", "nombre": "Lampa", "tipo": "CO", "dpto": "Puno", "prov": "Lampa", "dist": "Lampa", "lat": -15.367, "lon": -70.367, "elev": 3892, "activa": true}, {"codigo": "001304", "nombre": "Azangaro", "tipo": "CO", "dpto": "Puno", "prov": "Azangaro", "dist": "Azangaro", "lat": -14.9, "lon": -70.183, "elev": 3859, "activa": true}, {"codigo": "001305", "nombre": "Macusani", "tipo": "CO", "dpto": "Puno", "prov": "Carabaya", "dist": "Macusani", "lat": -14.067, "lon": -70.433, "elev": 4316, "activa": true}, {"codigo": "001306", "nombre": "Desaguadero", "tipo": "CO", "dpto": "Puno", "prov": "Chucuito", "dist": "Desaguadero", "lat": -16.567, "lon": -69.033, "elev": 3808, "activa": true}, {"codigo": "001307", "nombre": "Ilave", "tipo": "CO", "dpto": "Puno", "prov": "El Collao", "dist": "Ilave", "lat": -16.083, "lon": -69.65, "elev": 3861, "activa": true}, {"codigo": "001308", "nombre": "Juli", "tipo": "CO", "dpto": "Puno", "prov": "Chucuito", "dist": "Juli", "lat": -16.2, "lon": -69.45, "elev": 3820, "activa": true}, {"codigo": "001309", "nombre": "Ananea", "tipo": "CO", "dpto": "Puno", "prov": "San Antonio de Putina", "dist": "Ananea", "lat": -14.683, "lon": -69.533, "elev": 4640, "activa": true}, {"codigo": "001401", "nombre": "Arequipa", "tipo": "CP", "dpto": "Arequipa", "prov": "Arequipa", "dist": "Arequipa", "lat": -16.317, "lon": -71.55, "elev": 2525, "activa": true}, {"codigo": "001402", "nombre": "Camaná", "tipo": "CO", "dpto": "Arequipa", "prov": "Camana", "dist": "Camana", "lat": -16.633, "lon": -72.7, "elev": 12, "activa": true}, {"codigo": "001403", "nombre": "Mollendo", "tipo": "CO", "dpto": "Arequipa", "prov": "Islay", "dist": "Mollendo", "lat": -17.017, "lon": -72.017, "elev": 7, "activa": true}, {"codigo": "001404", "nombre": "La Joya", "tipo": "CO", "dpto": "Arequipa", "prov": "Arequipa", "dist": "La Joya", "lat": -16.583, "lon": -71.867, "elev": 1244, "activa": true}, {"codigo": "001405", "nombre": "Chivay", "tipo": "CO", "dpto": "Arequipa", "prov": "Caylloma", "dist": "Chivay", "lat": -15.633, "lon": -71.6, "elev": 3633, "activa": true}, {"codigo": "001406", "nombre": "Cotahuasi", "tipo": "CO", "dpto": "Arequipa", "prov": "La Union", "dist": "Cotahuasi", "lat": -15.217, "lon": -72.883, "elev": 2683, "activa": true}, {"codigo": "001407", "nombre": "Imata", "tipo": "CO", "dpto": "Arequipa", "prov": "Caylloma", "dist": "San Antonio de Chuca", "lat": -15.833, "lon": -71.1, "elev": 4519, "activa": true}, {"codigo": "001408", "nombre": "Aplao", "tipo": "CO", "dpto": "Arequipa", "prov": "Castilla", "dist": "Aplao", "lat": -16.067, "lon": -72.5, "elev": 617, "activa": true}, {"codigo": "001501", "nombre": "Moquegua", "tipo": "CO", "dpto": "Moquegua", "prov": "Mariscal Nieto", "dist": "Moquegua", "lat": -17.183, "lon": -70.933, "elev": 1410, "activa": true}, {"codigo": "001502", "nombre": "Omate", "tipo": "CO", "dpto": "Moquegua", "prov": "General Sanchez Cerro", "dist": "Omate", "lat": -16.667, "lon": -70.983, "elev": 2070, "activa": true}, {"codigo": "001503", "nombre": "Ubinas", "tipo": "PLU", "dpto": "Moquegua", "prov": "General Sanchez Cerro", "dist": "Ubinas", "lat": -16.383, "lon": -70.9, "elev": 3380, "activa": true}, {"codigo": "001504", "nombre": "Ilo", "tipo": "CO", "dpto": "Moquegua", "prov": "Ilo", "dist": "Ilo", "lat": -17.633, "lon": -71.35, "elev": 65, "activa": true}, {"codigo": "001601", "nombre": "Tacna", "tipo": "CP", "dpto": "Tacna", "prov": "Tacna", "dist": "Tacna", "lat": -18.033, "lon": -70.25, "elev": 565, "activa": true}, {"codigo": "001602", "nombre": "Tarata", "tipo": "CO", "dpto": "Tacna", "prov": "Tarata", "dist": "Tarata", "lat": -17.483, "lon": -70.033, "elev": 3053, "activa": true}, {"codigo": "001603", "nombre": "Candarave", "tipo": "CO", "dpto": "Tacna", "prov": "Candarave", "dist": "Candarave", "lat": -17.267, "lon": -70.233, "elev": 3415, "activa": true}, {"codigo": "001604", "nombre": "Calana", "tipo": "PLU", "dpto": "Tacna", "prov": "Tacna", "dist": "Calana", "lat": -17.983, "lon": -70.2, "elev": 1200, "activa": true}, {"codigo": "001701", "nombre": "Ica", "tipo": "CP", "dpto": "Ica", "prov": "Ica", "dist": "Ica", "lat": -14.067, "lon": -75.733, "elev": 406, "activa": true}, {"codigo": "001702", "nombre": "Pisco", "tipo": "CO", "dpto": "Ica", "prov": "Pisco", "dist": "Pisco", "lat": -13.717, "lon": -76.217, "elev": 11, "activa": true}, {"codigo": "001703", "nombre": "Nazca", "tipo": "CO", "dpto": "Ica", "prov": "Nazca", "dist": "Nazca", "lat": -14.833, "lon": -74.933, "elev": 598, "activa": true}, {"codigo": "001704", "nombre": "Palpa", "tipo": "CO", "dpto": "Ica", "prov": "Palpa", "dist": "Palpa", "lat": -14.533, "lon": -75.183, "elev": 370, "activa": true}, {"codigo": "001705", "nombre": "Chincha Alta", "tipo": "CO", "dpto": "Ica", "prov": "Chincha", "dist": "Chincha Alta", "lat": -13.417, "lon": -76.15, "elev": 100, "activa": true}, {"codigo": "001801", "nombre": "Huancavelica", "tipo": "CP", "dpto": "Huancavelica", "prov": "Huancavelica", "dist": "Huancavelica", "lat": -12.783, "lon": -74.967, "elev": 3660, "activa": true}, {"codigo": "001802", "nombre": "Pampas", "tipo": "CO", "dpto": "Huancavelica", "prov": "Tayacaja", "dist": "Pampas", "lat": -12.4, "lon": -74.867, "elev": 3245, "activa": true}, {"codigo": "001803", "nombre": "Lircay", "tipo": "CO", "dpto": "Huancavelica", "prov": "Angaraes", "dist": "Lircay", "lat": -12.983, "lon": -74.733, "elev": 3288, "activa": true}, {"codigo": "001804", "nombre": "Santa Ines", "tipo": "PLU", "dpto": "Huancavelica", "prov": "Huaytara", "dist": "Cordova", "lat": -13.35, "lon": -75.2, "elev": 4659, "activa": true}, {"codigo": "001901", "nombre": "Andahuaylas", "tipo": "CO", "dpto": "Apurimac", "prov": "Andahuaylas", "dist": "Andahuaylas", "lat": -13.65, "lon": -73.383, "elev": 3025, "activa": true}, {"codigo": "001902", "nombre": "Abancay", "tipo": "CO", "dpto": "Apurimac", "prov": "Abancay", "dist": "Abancay", "lat": -13.633, "lon": -72.883, "elev": 2377, "activa": true}, {"codigo": "001903", "nombre": "Chalhuanca", "tipo": "CO", "dpto": "Apurimac", "prov": "Aymaraes", "dist": "Chalhuanca", "lat": -14.283, "lon": -73.233, "elev": 2878, "activa": true}, {"codigo": "001904", "nombre": "Antabamba", "tipo": "CO", "dpto": "Apurimac", "prov": "Antabamba", "dist": "Antabamba", "lat": -14.383, "lon": -72.883, "elev": 3643, "activa": true}, {"codigo": "002001", "nombre": "Tarapoto", "tipo": "CP", "dpto": "San Martin", "prov": "San Martin", "dist": "Tarapoto", "lat": -6.5, "lon": -76.367, "elev": 356, "activa": true}, {"codigo": "002002", "nombre": "Moyobamba", "tipo": "CO", "dpto": "San Martin", "prov": "Moyobamba", "dist": "Moyobamba", "lat": -6.033, "lon": -76.983, "elev": 860, "activa": true}, {"codigo": "002003", "nombre": "Rioja", "tipo": "CO", "dpto": "San Martin", "prov": "Rioja", "dist": "Rioja", "lat": -6.067, "lon": -77.117, "elev": 840, "activa": true}, {"codigo": "002004", "nombre": "Tocache", "tipo": "CO", "dpto": "San Martin", "prov": "Tocache", "dist": "Tocache", "lat": -8.183, "lon": -76.517, "elev": 575, "activa": true}, {"codigo": "002005", "nombre": "Juanjui", "tipo": "CO", "dpto": "San Martin", "prov": "Mariscal Caceres", "dist": "Juanjui", "lat": -7.183, "lon": -76.733, "elev": 350, "activa": true}, {"codigo": "002101", "nombre": "Iquitos", "tipo": "CP", "dpto": "Loreto", "prov": "Maynas", "dist": "Iquitos", "lat": -3.767, "lon": -73.3, "elev": 126, "activa": true}, {"codigo": "002102", "nombre": "Nauta", "tipo": "CO", "dpto": "Loreto", "prov": "Loreto", "dist": "Nauta", "lat": -4.5, "lon": -73.567, "elev": 122, "activa": true}, {"codigo": "002103", "nombre": "Requena", "tipo": "CO", "dpto": "Loreto", "prov": "Requena", "dist": "Requena", "lat": -5.05, "lon": -73.85, "elev": 129, "activa": true}, {"codigo": "002104", "nombre": "Yurimaguas", "tipo": "CO", "dpto": "Loreto", "prov": "Alto Amazonas", "dist": "Yurimaguas", "lat": -5.883, "lon": -76.117, "elev": 184, "activa": true}, {"codigo": "002105", "nombre": "Contamana", "tipo": "PLU", "dpto": "Loreto", "prov": "Ucayali", "dist": "Contamana", "lat": -7.35, "lon": -74.917, "elev": 150, "activa": true}, {"codigo": "002201", "nombre": "Puerto Maldonado", "tipo": "CP", "dpto": "Madre de Dios", "prov": "Tambopata", "dist": "Tambopata", "lat": -12.6, "lon": -69.183, "elev": 260, "activa": true}, {"codigo": "002202", "nombre": "Iberia", "tipo": "CO", "dpto": "Madre de Dios", "prov": "Tahuamanu", "dist": "Iberia", "lat": -11.417, "lon": -69.483, "elev": 297, "activa": true}, {"codigo": "002203", "nombre": "Iñapari", "tipo": "CO", "dpto": "Madre de Dios", "prov": "Tahuamanu", "dist": "Iñapari", "lat": -10.983, "lon": -69.583, "elev": 280, "activa": true}, {"codigo": "002301", "nombre": "Pucallpa", "tipo": "CP", "dpto": "Ucayali", "prov": "Coronel Portillo", "dist": "Calleria", "lat": -8.383, "lon": -74.567, "elev": 154, "activa": true}, {"codigo": "002302", "nombre": "Aguaytia", "tipo": "CO", "dpto": "Ucayali", "prov": "Padre Abad", "dist": "Padre Abad", "lat": -9.033, "lon": -75.5, "elev": 341, "activa": true}, {"codigo": "002303", "nombre": "Sepahua", "tipo": "PLU", "dpto": "Ucayali", "prov": "Atalaya", "dist": "Sepahua", "lat": -11.15, "lon": -73.033, "elev": 360, "activa": true}, {"codigo": "002401", "nombre": "Huanuco", "tipo": "CP", "dpto": "Huanuco", "prov": "Huanuco", "dist": "Huanuco", "lat": -9.933, "lon": -76.233, "elev": 1894, "activa": true}, {"codigo": "002402", "nombre": "Tingo Maria", "tipo": "CO", "dpto": "Huanuco", "prov": "Leoncio Prado", "dist": "Rupa Rupa", "lat": -9.3, "lon": -75.983, "elev": 660, "activa": true}, {"codigo": "002403", "nombre": "Ambo", "tipo": "CO", "dpto": "Huanuco", "prov": "Ambo", "dist": "Ambo", "lat": -10.133, "lon": -76.2, "elev": 2067, "activa": true}, {"codigo": "002404", "nombre": "Llata", "tipo": "CO", "dpto": "Huanuco", "prov": "Huamalies", "dist": "Llata", "lat": -9.6, "lon": -76.817, "elev": 3560, "activa": true}, {"codigo": "002501", "nombre": "Cerro de Pasco", "tipo": "CO", "dpto": "Pasco", "prov": "Pasco", "dist": "Chaupimarca", "lat": -10.683, "lon": -76.267, "elev": 4338, "activa": true}, {"codigo": "002502", "nombre": "Oxapampa", "tipo": "CO", "dpto": "Pasco", "prov": "Oxapampa", "dist": "Oxapampa", "lat": -10.583, "lon": -75.383, "elev": 1814, "activa": true}, {"codigo": "002503", "nombre": "San Martin de Pangoa", "tipo": "PLU", "dpto": "Pasco", "prov": "Oxapampa", "dist": "Huancabamba", "lat": -10.45, "lon": -75.617, "elev": 2080, "activa": true}, {"codigo": "002601", "nombre": "Chachapoyas", "tipo": "CP", "dpto": "Amazonas", "prov": "Chachapoyas", "dist": "Chachapoyas", "lat": -6.233, "lon": -77.867, "elev": 2450, "activa": true}, {"codigo": "002602", "nombre": "Bagua Grande", "tipo": "CO", "dpto": "Amazonas", "prov": "Utcubamba", "dist": "Bagua Grande", "lat": -5.75, "lon": -78.45, "elev": 480, "activa": true}, {"codigo": "002603", "nombre": "Rodriguez de Mendoza", "tipo": "CO", "dpto": "Amazonas", "prov": "Rodriguez de Mendoza", "dist": "San Nicolas", "lat": -6.367, "lon": -77.517, "elev": 1920, "activa": true}, {"codigo": "002604", "nombre": "Bagua", "tipo": "CO", "dpto": "Amazonas", "prov": "Bagua", "dist": "Bagua", "lat": -5.65, "lon": -78.533, "elev": 425, "activa": true}, {"codigo": "002605", "nombre": "Mendoza", "tipo": "PLU", "dpto": "Amazonas", "prov": "Rodriguez de Mendoza", "dist": "Mendoza", "lat": -6.517, "lon": -77.267, "elev": 1800, "activa": true}, {"codigo": "002701", "nombre": "Tumbes", "tipo": "CP", "dpto": "Tumbes", "prov": "Tumbes", "dist": "Tumbes", "lat": -3.567, "lon": -80.467, "elev": 20, "activa": true}, {"codigo": "002702", "nombre": "Zarumilla", "tipo": "CO", "dpto": "Tumbes", "prov": "Zarumilla", "dist": "Zarumilla", "lat": -3.5, "lon": -80.267, "elev": 30, "activa": true}, {"codigo": "002703", "nombre": "San Juan de la Virgen", "tipo": "PLU", "dpto": "Tumbes", "prov": "Tumbes", "dist": "San Juan de la Virgen", "lat": -3.633, "lon": -80.333, "elev": 50, "activa": true}];
+const TIPOS = {"CO": "Climatológica Ordinaria", "CP": "Climatológica Principal", "PLU": "Pluviométrica", "HLG": "Hidrológica", "DCP": "Automática (DCP)"};
+
+const COLORES = ['#E74C3C','#E67E22','#27AE60','#2980B9','#8E44AD'];
+const COLORES_LEAFLET = ['red','orange','green','blue','purple'];
+
+// ══════════════════════════════════════════════════════
+// MAPA LEAFLET
+// ══════════════════════════════════════════════════════
+const map = L.map('map', { center: [-9.5, -75.5], zoom: 6 });
+
+const capas = {
+  'Mapa base': L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19
+  }).addTo(map),
+  '🛰️ Satelital': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Esri World Imagery', maxZoom: 19
+  }),
+  '🗻 Topográfico': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Esri World Topo', maxZoom: 19
+  })
+};
+L.control.layers(capas, {}, { position: 'topright', collapsed: false }).addTo(map);
+
+let markersLayer  = L.layerGroup().addTo(map);
+let linesLayer    = L.layerGroup().addTo(map);
+let proyectoLayer = L.layerGroup().addTo(map);
+
+// ══════════════════════════════════════════════════════
+// HAVERSINE
+// ══════════════════════════════════════════════════════
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2
+    + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.asin(Math.sqrt(a));
+}
+
+// ══════════════════════════════════════════════════════
+// CONVERSIÓN UTM → LAT/LON con proj4js
+// ══════════════════════════════════════════════════════
+function utmAGeo(zona, este, norte) {
+  const epsg = 'EPSG:327' + String(zona).padStart(2,'0');
+  // Definir proyección UTM WGS84 Zona xS
+  const utmDef = '+proj=utm +zone=' + zona + ' +south +datum=WGS84 +units=m +no_defs';
+  const geo = proj4(utmDef, 'WGS84', [este, norte]);
+  return { lat: geo[1], lon: geo[0] };
+}
+
+// Lat/lon → UTM (detecta zona automáticamente)
+function geoAUtm(lat, lon) {
+  const zona = Math.floor((lon + 180) / 6) + 1;
+  const utmDef = '+proj=utm +zone=' + zona + ' +south +datum=WGS84 +units=m +no_defs';
+  const utm = proj4('WGS84', utmDef, [lon, lat]);
+  return { zona, este: utm[0], norte: utm[1] };
+}
+
+// ══════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════
+function switchTab(t) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&t==='geo')||(i===1&&t==='utm')));
+  document.getElementById('tab-geo').classList.toggle('active', t==='geo');
+  document.getElementById('tab-utm').classList.toggle('active', t==='utm');
+}
+
+// ══════════════════════════════════════════════════════
+// BÚSQUEDA PRINCIPAL
+// ══════════════════════════════════════════════════════
+function buscar() {
+  const errDiv = document.getElementById('error-msg');
+  errDiv.style.display = 'none';
+
+  let lat, lon, nombre;
+  const isGeo = document.getElementById('tab-geo').classList.contains('active');
+
+  try {
+    if (isGeo) {
+      lat    = parseFloat(document.getElementById('geo-lat').value);
+      lon    = parseFloat(document.getElementById('geo-lon').value);
+      nombre = document.getElementById('geo-nombre').value || 'Mi Proyecto';
+      if (isNaN(lat)||isNaN(lon)) throw new Error('Ingresa valores numéricos válidos para lat/lon.');
+      if (lat < -18.5 || lat > -0.5) throw new Error('Latitud fuera del rango de Perú (-18.5 a -0.5).');
+      if (lon < -82 || lon > -68.5)  throw new Error('Longitud fuera del rango de Perú (-82 a -68.5).');
+    } else {
+      const zona  = parseInt(document.getElementById('utm-zona').value);
+      const este  = parseFloat(document.getElementById('utm-este').value);
+      const norte = parseFloat(document.getElementById('utm-norte').value);
+      nombre = document.getElementById('utm-nombre').value || 'Mi Proyecto (UTM)';
+      if (isNaN(este)||isNaN(norte)) throw new Error('Ingresa valores numéricos válidos para Este y Norte.');
+      const geo = utmAGeo(zona, este, norte);
+      lat = geo.lat; lon = geo.lon;
+      if (lat < -19 || lat > 0 || lon < -83 || lon > -68)
+        throw new Error('Coordenadas UTM fuera del rango esperado para Perú.');
+    }
+  } catch(e) {
+    errDiv.textContent = '⚠️ ' + e.message;
+    errDiv.style.display = 'block';
+    return;
+  }
+
+  // Calcular distancias a todas las estaciones activas
+  const conDist = ESTACIONES.map(e => ({
+    ...e,
+    dist_km: Math.round(haversine(lat, lon, e.lat, e.lon) * 10) / 10
+  })).sort((a,b) => a.dist_km - b.dist_km).slice(0, 5);
+
+  mostrarResultados(lat, lon, nombre, conDist, isGeo);
+}
+
+// ══════════════════════════════════════════════════════
+// MOSTRAR RESULTADOS EN MAPA + PANEL
+// ══════════════════════════════════════════════════════
+function mostrarResultados(lat, lon, nombre, estaciones, isGeo) {
+  markersLayer.clearLayers();
+  linesLayer.clearLayers();
+  proyectoLayer.clearLayers();
+
+  // Coordenadas convertidas
+  const utm = geoAUtm(lat, lon);
+  const coordsDiv = document.getElementById('coords-result');
+  coordsDiv.innerHTML = `
+    <b>📌 ${nombre}</b><br>
+    🌐 <b>Geográficas:</b> lat ${lat.toFixed(6)}° | lon ${lon.toFixed(6)}°<br>
+    📐 <b>UTM WGS84 Z${utm.zona}S:</b> Este ${Math.round(utm.este).toLocaleString()} m | Norte ${Math.round(utm.norte).toLocaleString()} m
+  `;
+
+  // Marcador del proyecto
+  const iconProyecto = L.divIcon({
+    html: `<div style="background:#1A5276;color:white;border-radius:50%;width:28px;height:28px;
+                 display:flex;align-items:center;justify-content:center;font-size:14px;
+                 box-shadow:0 2px 6px rgba(0,0,0,0.4);border:2px solid white;">🏗️</div>`,
+    iconSize: [28,28], iconAnchor: [14,14]
+  });
+  L.marker([lat, lon], {icon: iconProyecto})
+   .bindPopup(`<b>🏗️ ${nombre}</b><br>
+     Lat: ${lat.toFixed(6)}° | Lon: ${lon.toFixed(6)}°<br>
+     UTM Z${utm.zona}S: ${Math.round(utm.este).toLocaleString()}E, ${Math.round(utm.norte).toLocaleString()}N`)
+   .addTo(proyectoLayer);
+
+  // Lista de resultados
+  const lista = document.getElementById('results-list');
+  lista.innerHTML = '';
+
+  estaciones.forEach((e, i) => {
+    const color = COLORES[i];
+    const utm_e = geoAUtm(e.lat, e.lon);
+
+    // Marcador estación
+    const iconEst = L.divIcon({
+      html: `<div style="background:${color};color:white;border-radius:50%;width:26px;height:26px;
+                   display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;
+                   box-shadow:0 2px 5px rgba(0,0,0,0.3);border:2px solid white;">${i+1}</div>`,
+      iconSize: [26,26], iconAnchor: [13,13]
+    });
+    L.marker([e.lat, e.lon], {icon: iconEst})
+     .bindPopup(`
+       <div style="font-family:Arial;font-size:12px;min-width:220px">
+         <div style="background:${color};color:white;padding:5px 8px;border-radius:3px;font-weight:bold;margin-bottom:6px">
+           #${i+1} — ${e.nombre}
+         </div>
+         <b>Código SENAMHI:</b> ${e.codigo}<br>
+         <b>Tipo:</b> ${e.tipo} — ${TIPOS[e.tipo] || e.tipo}<br>
+         <b>Estado:</b> ✅ Activa<br>
+         <hr style="margin:5px 0">
+         <b>📍 Ubicación</b><br>
+         ${e.dist}, ${e.prov}, ${e.dpto}<br>
+         <b>Elevación:</b> ${e.elev.toLocaleString()} m.s.n.m.<br>
+         <hr style="margin:5px 0">
+         <b>🌐 Geográficas:</b> ${e.lat.toFixed(5)}°, ${e.lon.toFixed(5)}°<br>
+         <b>📐 UTM Z${utm_e.zona}S:</b> ${Math.round(utm_e.este).toLocaleString()}E, ${Math.round(utm_e.norte).toLocaleString()}N<br>
+         <hr style="margin:5px 0">
+         <b style="color:${color}">📏 Distancia: ${e.dist_km} km</b>
+       </div>`, {maxWidth: 280})
+     .addTo(markersLayer);
+
+    // Línea punteada
+    const line = L.polyline([[lat,lon],[e.lat,e.lon]], {
+      color: color, weight: 2, opacity: 0.7, dashArray: '6 4'
+    }).addTo(linesLayer);
+
+    // Etiqueta distancia en el punto medio
+    const midLat = (lat+e.lat)/2, midLon = (lon+e.lon)/2;
+    L.marker([midLat, midLon], {
+      icon: L.divIcon({
+        html: `<div style="background:${color};color:white;padding:2px 6px;border-radius:10px;
+                     font-size:10px;font-weight:bold;white-space:nowrap;
+                     box-shadow:1px 1px 3px rgba(0,0,0,0.3)">${e.dist_km} km</div>`,
+        iconSize: [60,18], iconAnchor: [30,9]
+      })
+    }).addTo(linesLayer);
+
+    // Ítem de lista lateral
+    const li = document.createElement('li');
+    li.style.borderLeftColor = color;
+    li.innerHTML = `
+      <span class="est-rank" style="color:${color}">#${i+1}</span>
+      <span class="est-dist" style="color:${color}">${e.dist_km} km</span>
+      <span class="est-name">${e.nombre}</span>
+      <div class="est-meta">
+        ${e.tipo} · ${TIPOS[e.tipo] || ''} · ${e.elev.toLocaleString()} m.s.n.m.<br>
+        ${e.dist}, ${e.prov}, ${e.dpto}
+      </div>`;
+    li.onclick = () => map.setView([e.lat, e.lon], 12);
+    lista.appendChild(li);
+  });
+
+  document.getElementById('results-section').style.display = 'block';
+
+  // Zoom automático para mostrar proyecto + estaciones
+  const bounds = L.latLngBounds([[lat,lon], ...estaciones.map(e=>[e.lat,e.lon])]);
+  map.fitBounds(bounds.pad(0.15));
+}
+
+// Búsqueda inicial automática
+window.addEventListener('load', () => buscar());
+</script>
+</body>
+</html>

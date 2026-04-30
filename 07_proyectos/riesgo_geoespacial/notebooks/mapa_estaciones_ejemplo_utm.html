@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_76f6dac15958c8adbbbafba4498414ba {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+    <div style="position:fixed; top:10px; right:50px;
+        background:white; border:2px solid #1A5276;
+        border-radius:8px; padding:12px;
+        font-family:Arial, sans-serif; font-size:12px;
+        z-index:1000; box-shadow:3px 3px 10px rgba(0,0,0,0.25);
+        min-width:380px; max-width:420px">
+        <div style="color:#1A5276; font-size:14px; font-weight:bold; margin-bottom:4px">
+            🌦️ Estaciones SENAMHI más cercanas
+        </div>
+        <div style="color:#555; font-size:11px; margin-bottom:6px">
+            📍 Ejemplo UTM — Cusco | lat: -13.4901 | lon: -72.0627
+        </div>
+        <table style="border-collapse:collapse; width:100%">
+            <thead>
+                <tr style="background:#EBF5FB; font-size:11px; color:#333">
+                    <th style="padding:3px 4px; text-align:left">#</th>
+                    <th style="padding:3px 4px; text-align:left">Nombre</th>
+                    <th style="padding:3px 4px; text-align:left">Tipo</th>
+                    <th style="padding:3px 4px; text-align:left">Dist.</th>
+                    <th style="padding:3px 4px; text-align:left">Región</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr>
+            <td style="color:#E74C3C; font-weight:bold; padding:2px 4px">#1</td>
+            <td style="padding:2px 4px"><b>Cusco</b></td>
+            <td style="padding:2px 4px; color:#555; font-size:10px">CP</td>
+            <td style="padding:2px 4px; color:#E74C3C; font-weight:bold">11.4 km</td>
+            <td style="padding:2px 4px; color:#666; font-size:10px">Cusco</td>
+        </tr>
+        <tr>
+            <td style="color:#E67E22; font-weight:bold; padding:2px 4px">#2</td>
+            <td style="padding:2px 4px"><b>Urubamba</b></td>
+            <td style="padding:2px 4px; color:#555; font-size:10px">CO</td>
+            <td style="padding:2px 4px; color:#E67E22; font-weight:bold">20.1 km</td>
+            <td style="padding:2px 4px; color:#666; font-size:10px">Cusco</td>
+        </tr>
+        <tr>
+            <td style="color:#27AE60; font-weight:bold; padding:2px 4px">#3</td>
+            <td style="padding:2px 4px"><b>Calca</b></td>
+            <td style="padding:2px 4px; color:#555; font-size:10px">PLU</td>
+            <td style="padding:2px 4px; color:#27AE60; font-weight:bold">20.3 km</td>
+            <td style="padding:2px 4px; color:#666; font-size:10px">Cusco</td>
+        </tr>
+        <tr>
+            <td style="color:#2980B9; font-weight:bold; padding:2px 4px">#4</td>
+            <td style="padding:2px 4px"><b>Granja Kcayra</b></td>
+            <td style="padding:2px 4px; color:#555; font-size:10px">CO</td>
+            <td style="padding:2px 4px; color:#2980B9; font-weight:bold">20.5 km</td>
+            <td style="padding:2px 4px; color:#666; font-size:10px">Cusco</td>
+        </tr>
+        <tr>
+            <td style="color:#8E44AD; font-weight:bold; padding:2px 4px">#5</td>
+            <td style="padding:2px 4px"><b>Pisac</b></td>
+            <td style="padding:2px 4px; color:#555; font-size:10px">CO</td>
+            <td style="padding:2px 4px; color:#8E44AD; font-weight:bold">24.4 km</td>
+            <td style="padding:2px 4px; color:#666; font-size:10px">Cusco</td>
+        </tr>
+            </tbody>
+        </table>
+        <div style="margin-top:8px; font-size:10px; color:#777">
+            ✅ Solo estaciones activas | Fuente: SENAMHI
+        </div>
+    </div>
+    
+    
+    <div style="position:fixed; bottom:20px; left:20px;
+        background:white; border:1px solid #ccc;
+        border-radius:8px; padding:10px;
+        font-family:Arial, sans-serif; font-size:11px;
+        z-index:1000; box-shadow:2px 2px 6px rgba(0,0,0,0.2)">
+        <b style="font-size:12px">Estaciones por cercanía</b><br>
+        <span style="color:#E74C3C">●</span> #1 Más cercana<br>
+        <span style="color:#E67E22">●</span> #2<br>
+        <span style="color:#27AE60">●</span> #3<br>
+        <span style="color:#2980B9">●</span> #4<br>
+        <span style="color:#8E44AD">●</span> #5<br>
+        <hr style="margin:5px 0">
+        <b>Tipos de estación</b><br>
+        CP = Climatológica Principal<br>
+        CO = Climatológica Ordinaria<br>
+        PLU = Pluviométrica<br>
+        HLG = Hidrológica<br>
+        DCP = Automática<br>
+        <hr style="margin:5px 0">
+        <i style="font-size:9px; color:#999">Fuente: SENAMHI — Perú</i>
+    </div>
+    
+    
+            <div class="folium-map" id="map_76f6dac15958c8adbbbafba4498414ba" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_76f6dac15958c8adbbbafba4498414ba = L.map(
+                "map_76f6dac15958c8adbbbafba4498414ba",
+                {
+                    center: [-13.490064, -72.062688],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 9,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_3cb001ecfdc3ec208c53cb7f2a4c8de8 = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_3cb001ecfdc3ec208c53cb7f2a4c8de8.addTo(map_76f6dac15958c8adbbbafba4498414ba);
+        
+    
+            var tile_layer_e1aaf224e2de90abcf6a92afcf589133 = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Esri World Imagery",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_e1aaf224e2de90abcf6a92afcf589133.addTo(map_76f6dac15958c8adbbbafba4498414ba);
+        
+    
+            var tile_layer_3aea3c65d499dc0014d20b05d23ba6f1 = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Esri World Topo",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_3aea3c65d499dc0014d20b05d23ba6f1.addTo(map_76f6dac15958c8adbbbafba4498414ba);
+        
+    
+            var feature_group_22bdcdfa7ff7054d48409684a342ff00 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var marker_1b970395da22b3f54a4e08764f712527 = L.marker(
+                [-13.533, -71.967],
+                {
+}
+            ).addTo(feature_group_22bdcdfa7ff7054d48409684a342ff00);
+        
+    
+            var icon_16c8c701530e42605e92f3e3c3a76c94 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "cloud",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_1785975e09f55d326e79639dc666e348 = L.popup({
+  "maxWidth": 310,
+});
+
+        
+            
+                var html_b6b595e4f3bff92b66f28b67767df5bb = $(`<div id="html_b6b595e4f3bff92b66f28b67767df5bb" style="width: 100.0%; height: 100.0%;">         <div style="width:290px; font-family:Arial, sans-serif; font-size:12px">             <div style="background:#E74C3C; color:white; padding:6px 10px;                         border-radius:4px 4px 0 0; font-size:14px; font-weight:bold">                 #1 — Cusco             </div>             <div style="padding:8px">                 <b>Código SENAMHI:</b> 001201<br>                 <b>Tipo:</b> CP — Climatológica Principal<br>                 <b>Estado:</b> ✅ Activa<br>                 <hr style="margin:5px 0">                 <b>📍 Ubicación</b><br>                 Departamento: <b>Cusco</b><br>                 Provincia: Cusco<br>                 Distrito: Cusco<br>                 Elevación: <b>3,399 m.s.n.m.</b>                 <hr style="margin:5px 0">                 <b>🌐 Coordenadas Geográficas (WGS84)</b><br>                 Lat: <b>-13.533000°</b><br>                 Lon: <b>-71.967000°</b>                              <hr style="margin:5px 0">             <b>📐 Coordenadas UTM (WGS84)</b><br>             Zona: <b>19S</b><br>             Este: <b>178,826 m</b><br>             Norte: <b>8,501,973 m</b>                              <hr style="margin:5px 0">                 <b>📏 Distancia al proyecto:</b>                 <span style="color:#E74C3C; font-size:15px; font-weight:bold">                     11.4 km                 </span>             </div>         </div>         </div>`)[0];
+                popup_1785975e09f55d326e79639dc666e348.setContent(html_b6b595e4f3bff92b66f28b67767df5bb);
+            
+        
+
+        marker_1b970395da22b3f54a4e08764f712527.bindPopup(popup_1785975e09f55d326e79639dc666e348)
+        ;
+
+        
+    
+    
+            marker_1b970395da22b3f54a4e08764f712527.bindTooltip(
+                `<div>
+                     #1 Cusco — 11.4 km | CP
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_1b970395da22b3f54a4e08764f712527.setIcon(icon_16c8c701530e42605e92f3e3c3a76c94);
+            
+    
+            var marker_bdfaf948cf3b03636811915a7e76e454 = L.marker(
+                [-13.317, -72.117],
+                {
+}
+            ).addTo(feature_group_22bdcdfa7ff7054d48409684a342ff00);
+        
+    
+            var icon_9ec4e6c06cf26e6a845cdb417a7ae418 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "cloud",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_02dd6b7cee2bd967b4f63269d42bfbef = L.popup({
+  "maxWidth": 310,
+});
+
+        
+            
+                var html_3f1ad90d9c004c6e8ca0ca340f983251 = $(`<div id="html_3f1ad90d9c004c6e8ca0ca340f983251" style="width: 100.0%; height: 100.0%;">         <div style="width:290px; font-family:Arial, sans-serif; font-size:12px">             <div style="background:#E67E22; color:white; padding:6px 10px;                         border-radius:4px 4px 0 0; font-size:14px; font-weight:bold">                 #2 — Urubamba             </div>             <div style="padding:8px">                 <b>Código SENAMHI:</b> 001207<br>                 <b>Tipo:</b> CO — Climatológica Ordinaria<br>                 <b>Estado:</b> ✅ Activa<br>                 <hr style="margin:5px 0">                 <b>📍 Ubicación</b><br>                 Departamento: <b>Cusco</b><br>                 Provincia: Urubamba<br>                 Distrito: Urubamba<br>                 Elevación: <b>2,871 m.s.n.m.</b>                 <hr style="margin:5px 0">                 <b>🌐 Coordenadas Geográficas (WGS84)</b><br>                 Lat: <b>-13.317000°</b><br>                 Lon: <b>-72.117000°</b>                              <hr style="margin:5px 0">             <b>📐 Coordenadas UTM (WGS84)</b><br>             Zona: <b>18S</b><br>             Este: <b>812,354 m</b><br>             Norte: <b>8,525,997 m</b>                              <hr style="margin:5px 0">                 <b>📏 Distancia al proyecto:</b>                 <span style="color:#E67E22; font-size:15px; font-weight:bold">                     20.1 km                 </span>             </div>         </div>         </div>`)[0];
+                popup_02dd6b7cee2bd967b4f63269d42bfbef.setContent(html_3f1ad90d9c004c6e8ca0ca340f983251);
+            
+        
+
+        marker_bdfaf948cf3b03636811915a7e76e454.bindPopup(popup_02dd6b7cee2bd967b4f63269d42bfbef)
+        ;
+
+        
+    
+    
+            marker_bdfaf948cf3b03636811915a7e76e454.bindTooltip(
+                `<div>
+                     #2 Urubamba — 20.1 km | CO
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_bdfaf948cf3b03636811915a7e76e454.setIcon(icon_9ec4e6c06cf26e6a845cdb417a7ae418);
+            
+    
+            var marker_fc9f22e42def6a5a085f9b49b7dec54d = L.marker(
+                [-13.333, -71.967],
+                {
+}
+            ).addTo(feature_group_22bdcdfa7ff7054d48409684a342ff00);
+        
+    
+            var icon_d18e590a853e29b6f838761b97103bb6 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "cloud",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_f13b247ecd86e73b36c68deeedfc50fe = L.popup({
+  "maxWidth": 310,
+});
+
+        
+            
+                var html_6d2fae59a273466902da64fc979903a0 = $(`<div id="html_6d2fae59a273466902da64fc979903a0" style="width: 100.0%; height: 100.0%;">         <div style="width:290px; font-family:Arial, sans-serif; font-size:12px">             <div style="background:#27AE60; color:white; padding:6px 10px;                         border-radius:4px 4px 0 0; font-size:14px; font-weight:bold">                 #3 — Calca             </div>             <div style="padding:8px">                 <b>Código SENAMHI:</b> 001208<br>                 <b>Tipo:</b> PLU — Pluviométrica<br>                 <b>Estado:</b> ✅ Activa<br>                 <hr style="margin:5px 0">                 <b>📍 Ubicación</b><br>                 Departamento: <b>Cusco</b><br>                 Provincia: Calca<br>                 Distrito: Calca<br>                 Elevación: <b>2,928 m.s.n.m.</b>                 <hr style="margin:5px 0">                 <b>🌐 Coordenadas Geográficas (WGS84)</b><br>                 Lat: <b>-13.333000°</b><br>                 Lon: <b>-71.967000°</b>                              <hr style="margin:5px 0">             <b>📐 Coordenadas UTM (WGS84)</b><br>             Zona: <b>19S</b><br>             Este: <b>178,560 m</b><br>             Norte: <b>8,524,118 m</b>                              <hr style="margin:5px 0">                 <b>📏 Distancia al proyecto:</b>                 <span style="color:#27AE60; font-size:15px; font-weight:bold">                     20.3 km                 </span>             </div>         </div>         </div>`)[0];
+                popup_f13b247ecd86e73b36c68deeedfc50fe.setContent(html_6d2fae59a273466902da64fc979903a0);
+            
+        
+
+        marker_fc9f22e42def6a5a085f9b49b7dec54d.bindPopup(popup_f13b247ecd86e73b36c68deeedfc50fe)
+        ;
+
+        
+    
+    
+            marker_fc9f22e42def6a5a085f9b49b7dec54d.bindTooltip(
+                `<div>
+                     #3 Calca — 20.3 km | PLU
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_fc9f22e42def6a5a085f9b49b7dec54d.setIcon(icon_d18e590a853e29b6f838761b97103bb6);
+            
+    
+            var marker_6ef60e93257aab44d07bd6027a8f6b5f = L.marker(
+                [-13.55, -71.883],
+                {
+}
+            ).addTo(feature_group_22bdcdfa7ff7054d48409684a342ff00);
+        
+    
+            var icon_55aaabe0541b21c433e3ace0e651095d = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "cloud",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_861aec45157751efc821ff3fb426aa4b = L.popup({
+  "maxWidth": 310,
+});
+
+        
+            
+                var html_8a444af5da9e546a15d8fa9ca79df5c9 = $(`<div id="html_8a444af5da9e546a15d8fa9ca79df5c9" style="width: 100.0%; height: 100.0%;">         <div style="width:290px; font-family:Arial, sans-serif; font-size:12px">             <div style="background:#2980B9; color:white; padding:6px 10px;                         border-radius:4px 4px 0 0; font-size:14px; font-weight:bold">                 #4 — Granja Kcayra             </div>             <div style="padding:8px">                 <b>Código SENAMHI:</b> 001209<br>                 <b>Tipo:</b> CO — Climatológica Ordinaria<br>                 <b>Estado:</b> ✅ Activa<br>                 <hr style="margin:5px 0">                 <b>📍 Ubicación</b><br>                 Departamento: <b>Cusco</b><br>                 Provincia: Cusco<br>                 Distrito: San Jeronimo<br>                 Elevación: <b>3,219 m.s.n.m.</b>                 <hr style="margin:5px 0">                 <b>🌐 Coordenadas Geográficas (WGS84)</b><br>                 Lat: <b>-13.550000°</b><br>                 Lon: <b>-71.883000°</b>                              <hr style="margin:5px 0">             <b>📐 Coordenadas UTM (WGS84)</b><br>             Zona: <b>19S</b><br>             Este: <b>187,948 m</b><br>             Norte: <b>8,500,200 m</b>                              <hr style="margin:5px 0">                 <b>📏 Distancia al proyecto:</b>                 <span style="color:#2980B9; font-size:15px; font-weight:bold">                     20.5 km                 </span>             </div>         </div>         </div>`)[0];
+                popup_861aec45157751efc821ff3fb426aa4b.setContent(html_8a444af5da9e546a15d8fa9ca79df5c9);
+            
+        
+
+        marker_6ef60e93257aab44d07bd6027a8f6b5f.bindPopup(popup_861aec45157751efc821ff3fb426aa4b)
+        ;
+
+        
+    
+    
+            marker_6ef60e93257aab44d07bd6027a8f6b5f.bindTooltip(
+                `<div>
+                     #4 Granja Kcayra — 20.5 km | CO
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_6ef60e93257aab44d07bd6027a8f6b5f.setIcon(icon_55aaabe0541b21c433e3ace0e651095d);
+            
+    
+            var marker_d026eef7f5488042a62e88a7f68d9ddb = L.marker(
+                [-13.417, -71.85],
+                {
+}
+            ).addTo(feature_group_22bdcdfa7ff7054d48409684a342ff00);
+        
+    
+            var icon_0b10ce554ff189d8430a16c6a6fce5eb = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "purple",
+  "iconColor": "white",
+  "icon": "cloud",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_68505e0c59a34bfd42c363d807bd2fe4 = L.popup({
+  "maxWidth": 310,
+});
+
+        
+            
+                var html_84318a4f70f4b478cfa5c89e25cbf852 = $(`<div id="html_84318a4f70f4b478cfa5c89e25cbf852" style="width: 100.0%; height: 100.0%;">         <div style="width:290px; font-family:Arial, sans-serif; font-size:12px">             <div style="background:#8E44AD; color:white; padding:6px 10px;                         border-radius:4px 4px 0 0; font-size:14px; font-weight:bold">                 #5 — Pisac             </div>             <div style="padding:8px">                 <b>Código SENAMHI:</b> 001202<br>                 <b>Tipo:</b> CO — Climatológica Ordinaria<br>                 <b>Estado:</b> ✅ Activa<br>                 <hr style="margin:5px 0">                 <b>📍 Ubicación</b><br>                 Departamento: <b>Cusco</b><br>                 Provincia: Calca<br>                 Distrito: Pisac<br>                 Elevación: <b>2,975 m.s.n.m.</b>                 <hr style="margin:5px 0">                 <b>🌐 Coordenadas Geográficas (WGS84)</b><br>                 Lat: <b>-13.417000°</b><br>                 Lon: <b>-71.850000°</b>                              <hr style="margin:5px 0">             <b>📐 Coordenadas UTM (WGS84)</b><br>             Zona: <b>19S</b><br>             Este: <b>191,352 m</b><br>             Norte: <b>8,514,967 m</b>                              <hr style="margin:5px 0">                 <b>📏 Distancia al proyecto:</b>                 <span style="color:#8E44AD; font-size:15px; font-weight:bold">                     24.4 km                 </span>             </div>         </div>         </div>`)[0];
+                popup_68505e0c59a34bfd42c363d807bd2fe4.setContent(html_84318a4f70f4b478cfa5c89e25cbf852);
+            
+        
+
+        marker_d026eef7f5488042a62e88a7f68d9ddb.bindPopup(popup_68505e0c59a34bfd42c363d807bd2fe4)
+        ;
+
+        
+    
+    
+            marker_d026eef7f5488042a62e88a7f68d9ddb.bindTooltip(
+                `<div>
+                     #5 Pisac — 24.4 km | CO
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_d026eef7f5488042a62e88a7f68d9ddb.setIcon(icon_0b10ce554ff189d8430a16c6a6fce5eb);
+            
+    
+            feature_group_22bdcdfa7ff7054d48409684a342ff00.addTo(map_76f6dac15958c8adbbbafba4498414ba);
+        
+    
+            var feature_group_97c20b88da871a5522725ed20de25a94 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var poly_line_9a4bb38deb934f6b2a00c613be64d777 = L.polyline(
+                [[-13.490064, -72.062688], [-13.533, -71.967]],
+                {"bubblingMouseEvents": true, "color": "#E74C3C", "dashArray": "5 5", "dashOffset": null, "fill": false, "fillColor": "#E74C3C", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.6, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(feature_group_97c20b88da871a5522725ed20de25a94);
+        
+    
+            poly_line_9a4bb38deb934f6b2a00c613be64d777.bindTooltip(
+                `<div>
+                     #1 Cusco: 11.4 km
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_babcb70f2b0b4ff2cff8b674ec8a71d7 = L.marker(
+                [-13.511531999999999, -72.014844],
+                {
+}
+            ).addTo(feature_group_97c20b88da871a5522725ed20de25a94);
+        
+    
+            var div_icon_165eab323362ab97cd1893147b789402 = L.divIcon({
+  "html": "\u003cdiv style=\"\n                    background:#E74C3C; color:white; padding:2px 6px;\n                    border-radius:10px; font-size:10px; font-weight:bold;\n                    white-space:nowrap; box-shadow:1px 1px 3px rgba(0,0,0,0.4)\"\u003e\n                    11.4 km\n                \u003c/div\u003e",
+  "iconSize": [70, 20],
+  "iconAnchor": [35, 10],
+  "className": "empty",
+});
+        
+    
+                marker_babcb70f2b0b4ff2cff8b674ec8a71d7.setIcon(div_icon_165eab323362ab97cd1893147b789402);
+            
+    
+            var poly_line_ea4ed8ddf24978594e2c5eb100aa621d = L.polyline(
+                [[-13.490064, -72.062688], [-13.317, -72.117]],
+                {"bubblingMouseEvents": true, "color": "#E67E22", "dashArray": "5 5", "dashOffset": null, "fill": false, "fillColor": "#E67E22", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.6, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(feature_group_97c20b88da871a5522725ed20de25a94);
+        
+    
+            poly_line_ea4ed8ddf24978594e2c5eb100aa621d.bindTooltip(
+                `<div>
+                     #2 Urubamba: 20.1 km
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_22f1a184e8351af77fc899ac27cde8eb = L.marker(
+                [-13.403532, -72.089844],
+                {
+}
+            ).addTo(feature_group_97c20b88da871a5522725ed20de25a94);
+        
+    
+            var div_icon_a02738be102941c76460f87e9ccd1e5a = L.divIcon({
+  "html": "\u003cdiv style=\"\n                    background:#E67E22; color:white; padding:2px 6px;\n                    border-radius:10px; font-size:10px; font-weight:bold;\n                    white-space:nowrap; box-shadow:1px 1px 3px rgba(0,0,0,0.4)\"\u003e\n                    20.1 km\n                \u003c/div\u003e",
+  "iconSize": [70, 20],
+  "iconAnchor": [35, 10],
+  "className": "empty",
+});
+        
+    
+                marker_22f1a184e8351af77fc899ac27cde8eb.setIcon(div_icon_a02738be102941c76460f87e9ccd1e5a);
+            
+    
+            var poly_line_b543639992a6785ada66b8fc10de1043 = L.polyline(
+                [[-13.490064, -72.062688], [-13.333, -71.967]],
+                {"bubblingMouseEvents": true, "color": "#27AE60", "dashArray": "5 5", "dashOffset": null, "fill": false, "fillColor": "#27AE60", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.6, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(feature_group_97c20b88da871a5522725ed20de25a94);
+        
+    
+            poly_line_b543639992a6785ada66b8fc10de1043.bindTooltip(
+                `<div>
+                     #3 Calca: 20.3 km
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_862c29a1902196683365264d92274f0a = L.marker(
+                [-13.411532000000001, -72.014844],
+                {
+}
+            ).addTo(feature_group_97c20b88da871a5522725ed20de25a94);
+        
+    
+            var div_icon_91d99f1206bcc81d17c2882701474e8f = L.divIcon({
+  "html": "\u003cdiv style=\"\n                    background:#27AE60; color:white; padding:2px 6px;\n                    border-radius:10px; font-size:10px; font-weight:bold;\n                    white-space:nowrap; box-shadow:1px 1px 3px rgba(0,0,0,0.4)\"\u003e\n                    20.3 km\n                \u003c/div\u003e",
+  "iconSize": [70, 20],
+  "iconAnchor": [35, 10],
+  "className": "empty",
+});
+        
+    
+                marker_862c29a1902196683365264d92274f0a.setIcon(div_icon_91d99f1206bcc81d17c2882701474e8f);
+            
+    
+            var poly_line_6e8cc800b90aa8930c18415294c5a9c6 = L.polyline(
+                [[-13.490064, -72.062688], [-13.55, -71.883]],
+                {"bubblingMouseEvents": true, "color": "#2980B9", "dashArray": "5 5", "dashOffset": null, "fill": false, "fillColor": "#2980B9", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.6, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(feature_group_97c20b88da871a5522725ed20de25a94);
+        
+    
+            poly_line_6e8cc800b90aa8930c18415294c5a9c6.bindTooltip(
+                `<div>
+                     #4 Granja Kcayra: 20.5 km
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_330ef24a5d3847d734ea6c96e8deb5b1 = L.marker(
+                [-13.520032, -71.972844],
+                {
+}
+            ).addTo(feature_group_97c20b88da871a5522725ed20de25a94);
+        
+    
+            var div_icon_056bd9259ae47e012316f9f5b8df2518 = L.divIcon({
+  "html": "\u003cdiv style=\"\n                    background:#2980B9; color:white; padding:2px 6px;\n                    border-radius:10px; font-size:10px; font-weight:bold;\n                    white-space:nowrap; box-shadow:1px 1px 3px rgba(0,0,0,0.4)\"\u003e\n                    20.5 km\n                \u003c/div\u003e",
+  "iconSize": [70, 20],
+  "iconAnchor": [35, 10],
+  "className": "empty",
+});
+        
+    
+                marker_330ef24a5d3847d734ea6c96e8deb5b1.setIcon(div_icon_056bd9259ae47e012316f9f5b8df2518);
+            
+    
+            var poly_line_cdf67d09b31d9300ed51812a94b75e67 = L.polyline(
+                [[-13.490064, -72.062688], [-13.417, -71.85]],
+                {"bubblingMouseEvents": true, "color": "#8E44AD", "dashArray": "5 5", "dashOffset": null, "fill": false, "fillColor": "#8E44AD", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.6, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(feature_group_97c20b88da871a5522725ed20de25a94);
+        
+    
+            poly_line_cdf67d09b31d9300ed51812a94b75e67.bindTooltip(
+                `<div>
+                     #5 Pisac: 24.4 km
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_5945909065ee51f984a959bfb8293032 = L.marker(
+                [-13.453532, -71.956344],
+                {
+}
+            ).addTo(feature_group_97c20b88da871a5522725ed20de25a94);
+        
+    
+            var div_icon_748431a6839d27e0fc2ac1377ffd6027 = L.divIcon({
+  "html": "\u003cdiv style=\"\n                    background:#8E44AD; color:white; padding:2px 6px;\n                    border-radius:10px; font-size:10px; font-weight:bold;\n                    white-space:nowrap; box-shadow:1px 1px 3px rgba(0,0,0,0.4)\"\u003e\n                    24.4 km\n                \u003c/div\u003e",
+  "iconSize": [70, 20],
+  "iconAnchor": [35, 10],
+  "className": "empty",
+});
+        
+    
+                marker_5945909065ee51f984a959bfb8293032.setIcon(div_icon_748431a6839d27e0fc2ac1377ffd6027);
+            
+    
+            feature_group_97c20b88da871a5522725ed20de25a94.addTo(map_76f6dac15958c8adbbbafba4498414ba);
+        
+    
+            var feature_group_e003ac49f66e39bea864001ebdf06929 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var marker_fef0b6095e59a464f36491f7bd42cd16 = L.marker(
+                [-13.490064, -72.062688],
+                {
+}
+            ).addTo(feature_group_e003ac49f66e39bea864001ebdf06929);
+        
+    
+            var icon_2123a2babdd1646bf2277f774c2275aa = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "darkblue",
+  "iconColor": "white",
+  "icon": "home",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_15149f70224a3ed9021a13f1c36390d8 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_785362fdfca2ff4ab8e0e7d7e85b1458 = $(`<div id="html_785362fdfca2ff4ab8e0e7d7e85b1458" style="width: 100.0%; height: 100.0%;">     <div style="width:280px; font-family:Arial, sans-serif; font-size:12px">         <div style="background:#1A5276; color:white; padding:6px 10px;                     border-radius:4px 4px 0 0; font-size:14px; font-weight:bold">             🏗️ Ejemplo UTM — Cusco         </div>         <div style="padding:8px">             <b>🌐 Coordenadas Geográficas</b><br>             Lat: <b>-13.490064°</b> | Lon: <b>-72.062688°</b>                          <hr style="margin:5px 0">             <b>📐 Coordenadas UTM del Proyecto</b><br>             Sistema: UTM WGS84 Zona 18S<br>             Este:  <b>818,014.5 m</b><br>             Norte: <b>8,506,766.1 m</b>                          <hr style="margin:5px 0">             <b>🌦️ Estaciones activas más cercanas:</b><br>             #1 Cusco — 11.4 km (Cusco)<br>#2 Urubamba — 20.1 km (Cusco)<br>#3 Calca — 20.3 km (Cusco)<br>#4 Granja Kcayra — 20.5 km (Cusco)<br>#5 Pisac — 24.4 km (Cusco)         </div>     </div>     </div>`)[0];
+                popup_15149f70224a3ed9021a13f1c36390d8.setContent(html_785362fdfca2ff4ab8e0e7d7e85b1458);
+            
+        
+
+        marker_fef0b6095e59a464f36491f7bd42cd16.bindPopup(popup_15149f70224a3ed9021a13f1c36390d8)
+        ;
+
+        
+    
+    
+            marker_fef0b6095e59a464f36491f7bd42cd16.bindTooltip(
+                `<div>
+                     📍 Ejemplo UTM — Cusco — Click para ver detalle
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_fef0b6095e59a464f36491f7bd42cd16.setIcon(icon_2123a2babdd1646bf2277f774c2275aa);
+            
+    
+            feature_group_e003ac49f66e39bea864001ebdf06929.addTo(map_76f6dac15958c8adbbbafba4498414ba);
+        
+    
+            var layer_control_83a780371dc1a5e4925c52b44c0a40b7_layers = {
+                base_layers : {
+                    "cartodbpositron" : tile_layer_3cb001ecfdc3ec208c53cb7f2a4c8de8,
+                    "\ud83d\udef0\ufe0f Satelital" : tile_layer_e1aaf224e2de90abcf6a92afcf589133,
+                    "\ud83d\uddfb Topogr\u00e1fico" : tile_layer_3aea3c65d499dc0014d20b05d23ba6f1,
+                },
+                overlays :  {
+                    "\ud83c\udf26\ufe0f Estaciones SENAMHI" : feature_group_22bdcdfa7ff7054d48409684a342ff00,
+                    "\ud83d\udccf L\u00edneas de distancia" : feature_group_97c20b88da871a5522725ed20de25a94,
+                    "\ud83c\udfd7\ufe0f Proyecto" : feature_group_e003ac49f66e39bea864001ebdf06929,
+                },
+            };
+            let layer_control_83a780371dc1a5e4925c52b44c0a40b7 = L.control.layers(
+                layer_control_83a780371dc1a5e4925c52b44c0a40b7_layers.base_layers,
+                layer_control_83a780371dc1a5e4925c52b44c0a40b7_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": false,
+  "autoZIndex": true,
+}
+            ).addTo(map_76f6dac15958c8adbbbafba4498414ba);
+
+        
+</script>
+</html>

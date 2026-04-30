@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_314f04fa808930e27626093842377691 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+    <div style="position:fixed; top:10px; right:50px;
+        background:white; border:2px solid #1A5276;
+        border-radius:8px; padding:12px;
+        font-family:Arial, sans-serif; font-size:12px;
+        z-index:1000; box-shadow:3px 3px 10px rgba(0,0,0,0.25);
+        min-width:380px; max-width:420px">
+        <div style="color:#1A5276; font-size:14px; font-weight:bold; margin-bottom:4px">
+            🌦️ Estaciones SENAMHI más cercanas
+        </div>
+        <div style="color:#555; font-size:11px; margin-bottom:6px">
+            📍 Proyecto Sauco — Salpo, Otuzco | lat: -8.0180 | lon: -78.5680
+        </div>
+        <table style="border-collapse:collapse; width:100%">
+            <thead>
+                <tr style="background:#EBF5FB; font-size:11px; color:#333">
+                    <th style="padding:3px 4px; text-align:left">#</th>
+                    <th style="padding:3px 4px; text-align:left">Nombre</th>
+                    <th style="padding:3px 4px; text-align:left">Tipo</th>
+                    <th style="padding:3px 4px; text-align:left">Dist.</th>
+                    <th style="padding:3px 4px; text-align:left">Región</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr>
+            <td style="color:#E74C3C; font-weight:bold; padding:2px 4px">#1</td>
+            <td style="padding:2px 4px"><b>Salpo</b></td>
+            <td style="padding:2px 4px; color:#555; font-size:10px">PLU</td>
+            <td style="padding:2px 4px; color:#E74C3C; font-weight:bold">1.7 km</td>
+            <td style="padding:2px 4px; color:#666; font-size:10px">La Liberta</td>
+        </tr>
+        <tr>
+            <td style="color:#E67E22; font-weight:bold; padding:2px 4px">#2</td>
+            <td style="padding:2px 4px"><b>Julcan</b></td>
+            <td style="padding:2px 4px; color:#555; font-size:10px">CO</td>
+            <td style="padding:2px 4px; color:#E67E22; font-weight:bold">7.9 km</td>
+            <td style="padding:2px 4px; color:#666; font-size:10px">La Liberta</td>
+        </tr>
+        <tr>
+            <td style="color:#27AE60; font-weight:bold; padding:2px 4px">#3</td>
+            <td style="padding:2px 4px"><b>Mollepata</b></td>
+            <td style="padding:2px 4px; color:#555; font-size:10px">PLU</td>
+            <td style="padding:2px 4px; color:#27AE60; font-weight:bold">8.3 km</td>
+            <td style="padding:2px 4px; color:#666; font-size:10px">La Liberta</td>
+        </tr>
+        <tr>
+            <td style="color:#2980B9; font-weight:bold; padding:2px 4px">#4</td>
+            <td style="padding:2px 4px"><b>Secsecpampa</b></td>
+            <td style="padding:2px 4px; color:#555; font-size:10px">PLU</td>
+            <td style="padding:2px 4px; color:#2980B9; font-weight:bold">10.9 km</td>
+            <td style="padding:2px 4px; color:#666; font-size:10px">La Liberta</td>
+        </tr>
+        <tr>
+            <td style="color:#8E44AD; font-weight:bold; padding:2px 4px">#5</td>
+            <td style="padding:2px 4px"><b>Charat</b></td>
+            <td style="padding:2px 4px; color:#555; font-size:10px">PLU</td>
+            <td style="padding:2px 4px; color:#8E44AD; font-weight:bold">12.5 km</td>
+            <td style="padding:2px 4px; color:#666; font-size:10px">La Liberta</td>
+        </tr>
+            </tbody>
+        </table>
+        <div style="margin-top:8px; font-size:10px; color:#777">
+            ✅ Solo estaciones activas | Fuente: SENAMHI
+        </div>
+    </div>
+    
+    
+    <div style="position:fixed; bottom:20px; left:20px;
+        background:white; border:1px solid #ccc;
+        border-radius:8px; padding:10px;
+        font-family:Arial, sans-serif; font-size:11px;
+        z-index:1000; box-shadow:2px 2px 6px rgba(0,0,0,0.2)">
+        <b style="font-size:12px">Estaciones por cercanía</b><br>
+        <span style="color:#E74C3C">●</span> #1 Más cercana<br>
+        <span style="color:#E67E22">●</span> #2<br>
+        <span style="color:#27AE60">●</span> #3<br>
+        <span style="color:#2980B9">●</span> #4<br>
+        <span style="color:#8E44AD">●</span> #5<br>
+        <hr style="margin:5px 0">
+        <b>Tipos de estación</b><br>
+        CP = Climatológica Principal<br>
+        CO = Climatológica Ordinaria<br>
+        PLU = Pluviométrica<br>
+        HLG = Hidrológica<br>
+        DCP = Automática<br>
+        <hr style="margin:5px 0">
+        <i style="font-size:9px; color:#999">Fuente: SENAMHI — Perú</i>
+    </div>
+    
+    
+            <div class="folium-map" id="map_314f04fa808930e27626093842377691" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_314f04fa808930e27626093842377691 = L.map(
+                "map_314f04fa808930e27626093842377691",
+                {
+                    center: [-8.018, -78.568],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 9,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_31df3cadfd484e73645a07d06a2c90d6 = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_31df3cadfd484e73645a07d06a2c90d6.addTo(map_314f04fa808930e27626093842377691);
+        
+    
+            var tile_layer_2ed3dc9869577bb82f93bc4f1743f015 = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Esri World Imagery",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_2ed3dc9869577bb82f93bc4f1743f015.addTo(map_314f04fa808930e27626093842377691);
+        
+    
+            var tile_layer_6532c21051acb9adb6567ec7cec65d48 = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Esri World Topo",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_6532c21051acb9adb6567ec7cec65d48.addTo(map_314f04fa808930e27626093842377691);
+        
+    
+            var feature_group_88a30fd02023f49ac4ef507de946f3ff = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var marker_72d09dada9865f9392241b40224e0b59 = L.marker(
+                [-8.017, -78.583],
+                {
+}
+            ).addTo(feature_group_88a30fd02023f49ac4ef507de946f3ff);
+        
+    
+            var icon_6030e3dc697eb02c8a919335467ad23b = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "cloud",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_6e5caff6e0c7cf5047380934de235262 = L.popup({
+  "maxWidth": 310,
+});
+
+        
+            
+                var html_461a4d067d59e85a399b6acdebc9e54a = $(`<div id="html_461a4d067d59e85a399b6acdebc9e54a" style="width: 100.0%; height: 100.0%;">         <div style="width:290px; font-family:Arial, sans-serif; font-size:12px">             <div style="background:#E74C3C; color:white; padding:6px 10px;                         border-radius:4px 4px 0 0; font-size:14px; font-weight:bold">                 #1 — Salpo             </div>             <div style="padding:8px">                 <b>Código SENAMHI:</b> 000406<br>                 <b>Tipo:</b> PLU — Pluviométrica<br>                 <b>Estado:</b> ✅ Activa<br>                 <hr style="margin:5px 0">                 <b>📍 Ubicación</b><br>                 Departamento: <b>La Libertad</b><br>                 Provincia: Otuzco<br>                 Distrito: Salpo<br>                 Elevación: <b>3,030 m.s.n.m.</b>                 <hr style="margin:5px 0">                 <b>🌐 Coordenadas Geográficas (WGS84)</b><br>                 Lat: <b>-8.017000°</b><br>                 Lon: <b>-78.583000°</b>                              <hr style="margin:5px 0">             <b>📐 Coordenadas UTM (WGS84)</b><br>             Zona: <b>17S</b><br>             Este: <b>766,417 m</b><br>             Norte: <b>9,113,039 m</b>                              <hr style="margin:5px 0">                 <b>📏 Distancia al proyecto:</b>                 <span style="color:#E74C3C; font-size:15px; font-weight:bold">                     1.7 km                 </span>             </div>         </div>         </div>`)[0];
+                popup_6e5caff6e0c7cf5047380934de235262.setContent(html_461a4d067d59e85a399b6acdebc9e54a);
+            
+        
+
+        marker_72d09dada9865f9392241b40224e0b59.bindPopup(popup_6e5caff6e0c7cf5047380934de235262)
+        ;
+
+        
+    
+    
+            marker_72d09dada9865f9392241b40224e0b59.bindTooltip(
+                `<div>
+                     #1 Salpo — 1.7 km | PLU
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_72d09dada9865f9392241b40224e0b59.setIcon(icon_6030e3dc697eb02c8a919335467ad23b);
+            
+    
+            var marker_fa037b73bb05ba1cd5a85850f2cf814e = L.marker(
+                [-8.042, -78.5],
+                {
+}
+            ).addTo(feature_group_88a30fd02023f49ac4ef507de946f3ff);
+        
+    
+            var icon_ae04ec8b142b39925e4a27b629466fd2 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "orange",
+  "iconColor": "white",
+  "icon": "cloud",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_edacf77e1193b198896e02de0e821380 = L.popup({
+  "maxWidth": 310,
+});
+
+        
+            
+                var html_43d5fd8b79aba3fdbd56bb22037895f5 = $(`<div id="html_43d5fd8b79aba3fdbd56bb22037895f5" style="width: 100.0%; height: 100.0%;">         <div style="width:290px; font-family:Arial, sans-serif; font-size:12px">             <div style="background:#E67E22; color:white; padding:6px 10px;                         border-radius:4px 4px 0 0; font-size:14px; font-weight:bold">                 #2 — Julcan             </div>             <div style="padding:8px">                 <b>Código SENAMHI:</b> 000402<br>                 <b>Tipo:</b> CO — Climatológica Ordinaria<br>                 <b>Estado:</b> ✅ Activa<br>                 <hr style="margin:5px 0">                 <b>📍 Ubicación</b><br>                 Departamento: <b>La Libertad</b><br>                 Provincia: Julcan<br>                 Distrito: Julcan<br>                 Elevación: <b>3,445 m.s.n.m.</b>                 <hr style="margin:5px 0">                 <b>🌐 Coordenadas Geográficas (WGS84)</b><br>                 Lat: <b>-8.042000°</b><br>                 Lon: <b>-78.500000°</b>                              <hr style="margin:5px 0">             <b>📐 Coordenadas UTM (WGS84)</b><br>             Zona: <b>17S</b><br>             Este: <b>775,554 m</b><br>             Norte: <b>9,110,218 m</b>                              <hr style="margin:5px 0">                 <b>📏 Distancia al proyecto:</b>                 <span style="color:#E67E22; font-size:15px; font-weight:bold">                     7.9 km                 </span>             </div>         </div>         </div>`)[0];
+                popup_edacf77e1193b198896e02de0e821380.setContent(html_43d5fd8b79aba3fdbd56bb22037895f5);
+            
+        
+
+        marker_fa037b73bb05ba1cd5a85850f2cf814e.bindPopup(popup_edacf77e1193b198896e02de0e821380)
+        ;
+
+        
+    
+    
+            marker_fa037b73bb05ba1cd5a85850f2cf814e.bindTooltip(
+                `<div>
+                     #2 Julcan — 7.9 km | CO
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_fa037b73bb05ba1cd5a85850f2cf814e.setIcon(icon_ae04ec8b142b39925e4a27b629466fd2);
+            
+    
+            var marker_b594d2d3422ab3d5c298622836260217 = L.marker(
+                [-7.95, -78.6],
+                {
+}
+            ).addTo(feature_group_88a30fd02023f49ac4ef507de946f3ff);
+        
+    
+            var icon_9dcf216f85e20da46c6fd4c9b95239b0 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "cloud",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_f47156b3fa1c9510d8c9d3389f6d0e90 = L.popup({
+  "maxWidth": 310,
+});
+
+        
+            
+                var html_9035788c20f7e26aa62d93cd68963a7e = $(`<div id="html_9035788c20f7e26aa62d93cd68963a7e" style="width: 100.0%; height: 100.0%;">         <div style="width:290px; font-family:Arial, sans-serif; font-size:12px">             <div style="background:#27AE60; color:white; padding:6px 10px;                         border-radius:4px 4px 0 0; font-size:14px; font-weight:bold">                 #3 — Mollepata             </div>             <div style="padding:8px">                 <b>Código SENAMHI:</b> 000407<br>                 <b>Tipo:</b> PLU — Pluviométrica<br>                 <b>Estado:</b> ✅ Activa<br>                 <hr style="margin:5px 0">                 <b>📍 Ubicación</b><br>                 Departamento: <b>La Libertad</b><br>                 Provincia: Otuzco<br>                 Distrito: Mollepata<br>                 Elevación: <b>2,700 m.s.n.m.</b>                 <hr style="margin:5px 0">                 <b>🌐 Coordenadas Geográficas (WGS84)</b><br>                 Lat: <b>-7.950000°</b><br>                 Lon: <b>-78.600000°</b>                              <hr style="margin:5px 0">             <b>📐 Coordenadas UTM (WGS84)</b><br>             Zona: <b>17S</b><br>             Este: <b>764,585 m</b><br>             Norte: <b>9,120,463 m</b>                              <hr style="margin:5px 0">                 <b>📏 Distancia al proyecto:</b>                 <span style="color:#27AE60; font-size:15px; font-weight:bold">                     8.3 km                 </span>             </div>         </div>         </div>`)[0];
+                popup_f47156b3fa1c9510d8c9d3389f6d0e90.setContent(html_9035788c20f7e26aa62d93cd68963a7e);
+            
+        
+
+        marker_b594d2d3422ab3d5c298622836260217.bindPopup(popup_f47156b3fa1c9510d8c9d3389f6d0e90)
+        ;
+
+        
+    
+    
+            marker_b594d2d3422ab3d5c298622836260217.bindTooltip(
+                `<div>
+                     #3 Mollepata — 8.3 km | PLU
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_b594d2d3422ab3d5c298622836260217.setIcon(icon_9dcf216f85e20da46c6fd4c9b95239b0);
+            
+    
+            var marker_e164a0b26e4421bb8787750532796dfe = L.marker(
+                [-7.967, -78.483],
+                {
+}
+            ).addTo(feature_group_88a30fd02023f49ac4ef507de946f3ff);
+        
+    
+            var icon_a2b45b6604e3b3ed39d071fabcdad55e = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "cloud",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_ce55cb51ad5fa5ad8b043551af30a28e = L.popup({
+  "maxWidth": 310,
+});
+
+        
+            
+                var html_7da9bda8148cfa8a2cc6d6dfe27894b4 = $(`<div id="html_7da9bda8148cfa8a2cc6d6dfe27894b4" style="width: 100.0%; height: 100.0%;">         <div style="width:290px; font-family:Arial, sans-serif; font-size:12px">             <div style="background:#2980B9; color:white; padding:6px 10px;                         border-radius:4px 4px 0 0; font-size:14px; font-weight:bold">                 #4 — Secsecpampa             </div>             <div style="padding:8px">                 <b>Código SENAMHI:</b> 000410<br>                 <b>Tipo:</b> PLU — Pluviométrica<br>                 <b>Estado:</b> ✅ Activa<br>                 <hr style="margin:5px 0">                 <b>📍 Ubicación</b><br>                 Departamento: <b>La Libertad</b><br>                 Provincia: Otuzco<br>                 Distrito: Agallpampa<br>                 Elevación: <b>3,350 m.s.n.m.</b>                 <hr style="margin:5px 0">                 <b>🌐 Coordenadas Geográficas (WGS84)</b><br>                 Lat: <b>-7.967000°</b><br>                 Lon: <b>-78.483000°</b>                              <hr style="margin:5px 0">             <b>📐 Coordenadas UTM (WGS84)</b><br>             Zona: <b>17S</b><br>             Este: <b>777,480 m</b><br>             Norte: <b>9,118,505 m</b>                              <hr style="margin:5px 0">                 <b>📏 Distancia al proyecto:</b>                 <span style="color:#2980B9; font-size:15px; font-weight:bold">                     10.9 km                 </span>             </div>         </div>         </div>`)[0];
+                popup_ce55cb51ad5fa5ad8b043551af30a28e.setContent(html_7da9bda8148cfa8a2cc6d6dfe27894b4);
+            
+        
+
+        marker_e164a0b26e4421bb8787750532796dfe.bindPopup(popup_ce55cb51ad5fa5ad8b043551af30a28e)
+        ;
+
+        
+    
+    
+            marker_e164a0b26e4421bb8787750532796dfe.bindTooltip(
+                `<div>
+                     #4 Secsecpampa — 10.9 km | PLU
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_e164a0b26e4421bb8787750532796dfe.setIcon(icon_a2b45b6604e3b3ed39d071fabcdad55e);
+            
+    
+            var marker_d72d032755a9d355a21c2b243092ca0a = L.marker(
+                [-7.917, -78.617],
+                {
+}
+            ).addTo(feature_group_88a30fd02023f49ac4ef507de946f3ff);
+        
+    
+            var icon_c6ffe5b9f8eb25e0fe3781c495a2807f = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "purple",
+  "iconColor": "white",
+  "icon": "cloud",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_c502f23242673608f177bb98a21bbfde = L.popup({
+  "maxWidth": 310,
+});
+
+        
+            
+                var html_877f3282b4174b83a958357d2cf358e9 = $(`<div id="html_877f3282b4174b83a958357d2cf358e9" style="width: 100.0%; height: 100.0%;">         <div style="width:290px; font-family:Arial, sans-serif; font-size:12px">             <div style="background:#8E44AD; color:white; padding:6px 10px;                         border-radius:4px 4px 0 0; font-size:14px; font-weight:bold">                 #5 — Charat             </div>             <div style="padding:8px">                 <b>Código SENAMHI:</b> 000408<br>                 <b>Tipo:</b> PLU — Pluviométrica<br>                 <b>Estado:</b> ✅ Activa<br>                 <hr style="margin:5px 0">                 <b>📍 Ubicación</b><br>                 Departamento: <b>La Libertad</b><br>                 Provincia: Otuzco<br>                 Distrito: Charat<br>                 Elevación: <b>1,700 m.s.n.m.</b>                 <hr style="margin:5px 0">                 <b>🌐 Coordenadas Geográficas (WGS84)</b><br>                 Lat: <b>-7.917000°</b><br>                 Lon: <b>-78.617000°</b>                              <hr style="margin:5px 0">             <b>📐 Coordenadas UTM (WGS84)</b><br>             Zona: <b>17S</b><br>             Este: <b>762,731 m</b><br>             Norte: <b>9,124,125 m</b>                              <hr style="margin:5px 0">                 <b>📏 Distancia al proyecto:</b>                 <span style="color:#8E44AD; font-size:15px; font-weight:bold">                     12.5 km                 </span>             </div>         </div>         </div>`)[0];
+                popup_c502f23242673608f177bb98a21bbfde.setContent(html_877f3282b4174b83a958357d2cf358e9);
+            
+        
+
+        marker_d72d032755a9d355a21c2b243092ca0a.bindPopup(popup_c502f23242673608f177bb98a21bbfde)
+        ;
+
+        
+    
+    
+            marker_d72d032755a9d355a21c2b243092ca0a.bindTooltip(
+                `<div>
+                     #5 Charat — 12.5 km | PLU
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_d72d032755a9d355a21c2b243092ca0a.setIcon(icon_c6ffe5b9f8eb25e0fe3781c495a2807f);
+            
+    
+            feature_group_88a30fd02023f49ac4ef507de946f3ff.addTo(map_314f04fa808930e27626093842377691);
+        
+    
+            var feature_group_93f5e69d38c6ed340b08b74d955a4890 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var poly_line_2e70f710986c78a4b33119e4fd49f45c = L.polyline(
+                [[-8.018, -78.568], [-8.017, -78.583]],
+                {"bubblingMouseEvents": true, "color": "#E74C3C", "dashArray": "5 5", "dashOffset": null, "fill": false, "fillColor": "#E74C3C", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.6, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(feature_group_93f5e69d38c6ed340b08b74d955a4890);
+        
+    
+            poly_line_2e70f710986c78a4b33119e4fd49f45c.bindTooltip(
+                `<div>
+                     #1 Salpo: 1.7 km
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_1182dce3985ce05740fe25a03d3fc79b = L.marker(
+                [-8.0175, -78.5755],
+                {
+}
+            ).addTo(feature_group_93f5e69d38c6ed340b08b74d955a4890);
+        
+    
+            var div_icon_5762051fe1cea0635ec3cc5b192664f5 = L.divIcon({
+  "html": "\u003cdiv style=\"\n                    background:#E74C3C; color:white; padding:2px 6px;\n                    border-radius:10px; font-size:10px; font-weight:bold;\n                    white-space:nowrap; box-shadow:1px 1px 3px rgba(0,0,0,0.4)\"\u003e\n                    1.7 km\n                \u003c/div\u003e",
+  "iconSize": [70, 20],
+  "iconAnchor": [35, 10],
+  "className": "empty",
+});
+        
+    
+                marker_1182dce3985ce05740fe25a03d3fc79b.setIcon(div_icon_5762051fe1cea0635ec3cc5b192664f5);
+            
+    
+            var poly_line_5db6bffe68295a0e02168d4b3fcdecbd = L.polyline(
+                [[-8.018, -78.568], [-8.042, -78.5]],
+                {"bubblingMouseEvents": true, "color": "#E67E22", "dashArray": "5 5", "dashOffset": null, "fill": false, "fillColor": "#E67E22", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.6, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(feature_group_93f5e69d38c6ed340b08b74d955a4890);
+        
+    
+            poly_line_5db6bffe68295a0e02168d4b3fcdecbd.bindTooltip(
+                `<div>
+                     #2 Julcan: 7.9 km
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_1ffd0210dcf8d593a65edc397889efd0 = L.marker(
+                [-8.030000000000001, -78.53399999999999],
+                {
+}
+            ).addTo(feature_group_93f5e69d38c6ed340b08b74d955a4890);
+        
+    
+            var div_icon_37c8fc4705fcb82653bc4343690e07aa = L.divIcon({
+  "html": "\u003cdiv style=\"\n                    background:#E67E22; color:white; padding:2px 6px;\n                    border-radius:10px; font-size:10px; font-weight:bold;\n                    white-space:nowrap; box-shadow:1px 1px 3px rgba(0,0,0,0.4)\"\u003e\n                    7.9 km\n                \u003c/div\u003e",
+  "iconSize": [70, 20],
+  "iconAnchor": [35, 10],
+  "className": "empty",
+});
+        
+    
+                marker_1ffd0210dcf8d593a65edc397889efd0.setIcon(div_icon_37c8fc4705fcb82653bc4343690e07aa);
+            
+    
+            var poly_line_482afdd75d75c783fa1b08f986460e33 = L.polyline(
+                [[-8.018, -78.568], [-7.95, -78.6]],
+                {"bubblingMouseEvents": true, "color": "#27AE60", "dashArray": "5 5", "dashOffset": null, "fill": false, "fillColor": "#27AE60", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.6, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(feature_group_93f5e69d38c6ed340b08b74d955a4890);
+        
+    
+            poly_line_482afdd75d75c783fa1b08f986460e33.bindTooltip(
+                `<div>
+                     #3 Mollepata: 8.3 km
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_83e9ec306aebc0fa2a3316a43a720f91 = L.marker(
+                [-7.984, -78.584],
+                {
+}
+            ).addTo(feature_group_93f5e69d38c6ed340b08b74d955a4890);
+        
+    
+            var div_icon_58448c2af4b37335d0cdce211d2ed446 = L.divIcon({
+  "html": "\u003cdiv style=\"\n                    background:#27AE60; color:white; padding:2px 6px;\n                    border-radius:10px; font-size:10px; font-weight:bold;\n                    white-space:nowrap; box-shadow:1px 1px 3px rgba(0,0,0,0.4)\"\u003e\n                    8.3 km\n                \u003c/div\u003e",
+  "iconSize": [70, 20],
+  "iconAnchor": [35, 10],
+  "className": "empty",
+});
+        
+    
+                marker_83e9ec306aebc0fa2a3316a43a720f91.setIcon(div_icon_58448c2af4b37335d0cdce211d2ed446);
+            
+    
+            var poly_line_677a11d8a7d4ceed4d863f9476159a27 = L.polyline(
+                [[-8.018, -78.568], [-7.967, -78.483]],
+                {"bubblingMouseEvents": true, "color": "#2980B9", "dashArray": "5 5", "dashOffset": null, "fill": false, "fillColor": "#2980B9", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.6, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(feature_group_93f5e69d38c6ed340b08b74d955a4890);
+        
+    
+            poly_line_677a11d8a7d4ceed4d863f9476159a27.bindTooltip(
+                `<div>
+                     #4 Secsecpampa: 10.9 km
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_0f9955c5a2bf78e6e4eabda552ef41a8 = L.marker(
+                [-7.9925, -78.5255],
+                {
+}
+            ).addTo(feature_group_93f5e69d38c6ed340b08b74d955a4890);
+        
+    
+            var div_icon_d236766489b94997068e6983ee30b34c = L.divIcon({
+  "html": "\u003cdiv style=\"\n                    background:#2980B9; color:white; padding:2px 6px;\n                    border-radius:10px; font-size:10px; font-weight:bold;\n                    white-space:nowrap; box-shadow:1px 1px 3px rgba(0,0,0,0.4)\"\u003e\n                    10.9 km\n                \u003c/div\u003e",
+  "iconSize": [70, 20],
+  "iconAnchor": [35, 10],
+  "className": "empty",
+});
+        
+    
+                marker_0f9955c5a2bf78e6e4eabda552ef41a8.setIcon(div_icon_d236766489b94997068e6983ee30b34c);
+            
+    
+            var poly_line_d325fb9b0979d2aa6e25c293c9ccc4d4 = L.polyline(
+                [[-8.018, -78.568], [-7.917, -78.617]],
+                {"bubblingMouseEvents": true, "color": "#8E44AD", "dashArray": "5 5", "dashOffset": null, "fill": false, "fillColor": "#8E44AD", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.6, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(feature_group_93f5e69d38c6ed340b08b74d955a4890);
+        
+    
+            poly_line_d325fb9b0979d2aa6e25c293c9ccc4d4.bindTooltip(
+                `<div>
+                     #5 Charat: 12.5 km
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_b639a35676175d1a0a784b34c1b32964 = L.marker(
+                [-7.9675, -78.5925],
+                {
+}
+            ).addTo(feature_group_93f5e69d38c6ed340b08b74d955a4890);
+        
+    
+            var div_icon_480a8cedeb878afb816e60d4de303b03 = L.divIcon({
+  "html": "\u003cdiv style=\"\n                    background:#8E44AD; color:white; padding:2px 6px;\n                    border-radius:10px; font-size:10px; font-weight:bold;\n                    white-space:nowrap; box-shadow:1px 1px 3px rgba(0,0,0,0.4)\"\u003e\n                    12.5 km\n                \u003c/div\u003e",
+  "iconSize": [70, 20],
+  "iconAnchor": [35, 10],
+  "className": "empty",
+});
+        
+    
+                marker_b639a35676175d1a0a784b34c1b32964.setIcon(div_icon_480a8cedeb878afb816e60d4de303b03);
+            
+    
+            feature_group_93f5e69d38c6ed340b08b74d955a4890.addTo(map_314f04fa808930e27626093842377691);
+        
+    
+            var feature_group_c1e7ffc97d92e519fc127bb0509a320d = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var marker_234e616dddc0c7108117824d9ea92455 = L.marker(
+                [-8.018, -78.568],
+                {
+}
+            ).addTo(feature_group_c1e7ffc97d92e519fc127bb0509a320d);
+        
+    
+            var icon_e5b7a43a68f88ef5965a183be8910e02 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "darkblue",
+  "iconColor": "white",
+  "icon": "home",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_d62478d14dd95343d733cefc67d8fcd9 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_d9176f567854a28aab6f8d5845763623 = $(`<div id="html_d9176f567854a28aab6f8d5845763623" style="width: 100.0%; height: 100.0%;">     <div style="width:280px; font-family:Arial, sans-serif; font-size:12px">         <div style="background:#1A5276; color:white; padding:6px 10px;                     border-radius:4px 4px 0 0; font-size:14px; font-weight:bold">             🏗️ Proyecto Sauco — Salpo, Otuzco         </div>         <div style="padding:8px">             <b>🌐 Coordenadas Geográficas</b><br>             Lat: <b>-8.018000°</b> | Lon: <b>-78.568000°</b>                          <hr style="margin:5px 0">             <b>📐 Coordenadas UTM del Proyecto</b><br>             Sistema: UTM WGS84 Zona 17S<br>             Este:  <b>768,070.6 m</b><br>             Norte: <b>9,112,918.3 m</b>                          <hr style="margin:5px 0">             <b>🌦️ Estaciones activas más cercanas:</b><br>             #1 Salpo — 1.7 km (La Libertad)<br>#2 Julcan — 7.9 km (La Libertad)<br>#3 Mollepata — 8.3 km (La Libertad)<br>#4 Secsecpampa — 10.9 km (La Libertad)<br>#5 Charat — 12.5 km (La Libertad)         </div>     </div>     </div>`)[0];
+                popup_d62478d14dd95343d733cefc67d8fcd9.setContent(html_d9176f567854a28aab6f8d5845763623);
+            
+        
+
+        marker_234e616dddc0c7108117824d9ea92455.bindPopup(popup_d62478d14dd95343d733cefc67d8fcd9)
+        ;
+
+        
+    
+    
+            marker_234e616dddc0c7108117824d9ea92455.bindTooltip(
+                `<div>
+                     📍 Proyecto Sauco — Salpo, Otuzco — Click para ver detalle
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_234e616dddc0c7108117824d9ea92455.setIcon(icon_e5b7a43a68f88ef5965a183be8910e02);
+            
+    
+            feature_group_c1e7ffc97d92e519fc127bb0509a320d.addTo(map_314f04fa808930e27626093842377691);
+        
+    
+            var layer_control_ce39458b314d18b0f1031ac19a81956e_layers = {
+                base_layers : {
+                    "cartodbpositron" : tile_layer_31df3cadfd484e73645a07d06a2c90d6,
+                    "\ud83d\udef0\ufe0f Satelital" : tile_layer_2ed3dc9869577bb82f93bc4f1743f015,
+                    "\ud83d\uddfb Topogr\u00e1fico" : tile_layer_6532c21051acb9adb6567ec7cec65d48,
+                },
+                overlays :  {
+                    "\ud83c\udf26\ufe0f Estaciones SENAMHI" : feature_group_88a30fd02023f49ac4ef507de946f3ff,
+                    "\ud83d\udccf L\u00edneas de distancia" : feature_group_93f5e69d38c6ed340b08b74d955a4890,
+                    "\ud83c\udfd7\ufe0f Proyecto" : feature_group_c1e7ffc97d92e519fc127bb0509a320d,
+                },
+            };
+            let layer_control_ce39458b314d18b0f1031ac19a81956e = L.control.layers(
+                layer_control_ce39458b314d18b0f1031ac19a81956e_layers.base_layers,
+                layer_control_ce39458b314d18b0f1031ac19a81956e_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": false,
+  "autoZIndex": true,
+}
+            ).addTo(map_314f04fa808930e27626093842377691);
+
+        
+</script>
+</html>
