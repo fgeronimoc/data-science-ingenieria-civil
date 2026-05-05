@@ -30,7 +30,8 @@ sys.path.insert(0, os.path.abspath(NOTEBOOKS_DIR))
 from buscador_estaciones_senamhi import (
     ESTACIONES_SENAMHI, TIPOS_ESTACION,
     buscar_estaciones, buscar_estaciones_utm,
-    generar_mapa_estaciones, haversine, geograficas_a_utm
+    generar_mapa_estaciones, haversine, geograficas_a_utm,
+    gms_a_decimal, decimal_a_gms,
 )
 
 # ── Módulo de análisis DEM ────────────────────────────────────────────────────
@@ -304,7 +305,7 @@ with st.sidebar:
 
     tipo_coord = st.radio(
         "Sistema de coordenadas",
-        ["🌐 Geográficas (Lat/Lon)", "📐 UTM (WGS84)"],
+        ["🌐 Geográficas (Lat/Lon)", "📐 UTM (WGS84)", "🧭 Sexagesimal (GMS)"],
         help="Selecciona el sistema de coordenadas de tu proyecto"
     )
 
@@ -330,6 +331,39 @@ with st.sidebar:
             )
         lat_final, lon_final = lat_input, lon_input
         coord_mode = "geo"
+    elif "Sexagesimal" in tipo_coord:
+        st.caption("Formato Grados, Minutos, Segundos. Para Perú: latitud Sur, longitud Oeste.")
+
+        st.markdown("**Latitud (Sur)**")
+        cla1, cla2, cla3 = st.columns(3)
+        with cla1:
+            lat_g = st.number_input("Grados ° (lat)",  value=8,  min_value=0, max_value=18, step=1, key="lat_g")
+        with cla2:
+            lat_m = st.number_input("Minutos ′ (lat)", value=1,  min_value=0, max_value=59, step=1, key="lat_m")
+        with cla3:
+            lat_s = st.number_input("Segundos ″ (lat)", value=4.8, min_value=0.0, max_value=59.99,
+                                    step=0.1, format="%.2f", key="lat_s")
+
+        st.markdown("**Longitud (Oeste)**")
+        clo1, clo2, clo3 = st.columns(3)
+        with clo1:
+            lon_g = st.number_input("Grados ° (lon)",  value=78, min_value=68, max_value=82, step=1, key="lon_g")
+        with clo2:
+            lon_m = st.number_input("Minutos ′ (lon)", value=34, min_value=0, max_value=59, step=1, key="lon_m")
+        with clo3:
+            lon_s = st.number_input("Segundos ″ (lon)", value=4.8, min_value=0.0, max_value=59.99,
+                                    step=0.1, format="%.2f", key="lon_s")
+
+        try:
+            lat_final = gms_a_decimal(lat_g, lat_m, lat_s, hemisferio='S')
+            lon_final = gms_a_decimal(lon_g, lon_m, lon_s, hemisferio='W')
+            st.success(
+                f"📍 **Decimal**: lat = {lat_final:.6f}°, lon = {lon_final:.6f}°"
+            )
+        except Exception as e:
+            st.error(f"Error en coordenadas GMS: {e}")
+            lat_final, lon_final = -8.018, -78.568
+        coord_mode = "gms"
     else:
         zona_utm = st.selectbox(
             "Zona UTM",
@@ -1042,8 +1076,6 @@ with tab6:
             m4.metric("📐 Pendiente factor",    f"{susc_data['factores']['pendiente'].mean():.2f} / 5")
 
             st.markdown("---")
-
-            # ── Figura matplotlib ─────────────────────────────────────────
             st.markdown("##### Análisis completo")
             fig_susc = res_s["figura"]
             if fig_susc:
