@@ -1,5 +1,5 @@
 # Data Science aplicado a la Ingeniería Civil
-### Repositorio de conocimiento — Fernando Geronimo Ccoillor Soto
+### Repositorio de conocimiento — Fernando Geronimo Ccoillor 
 
 ---
 
