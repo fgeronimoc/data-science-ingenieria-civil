@@ -19,6 +19,9 @@ import plotly.graph_objects as go
 import io
 import sys
 import os
+import zipfile
+import re
+import xml.etree.ElementTree as ET
 
 # ── Ruta al módulo de estaciones ─────────────────────────────────────────────
 # Agrega la carpeta del buscador al path de Python
@@ -161,6 +164,12 @@ PRECIP_REGIONES = {
 COLORES_RANK = {1:'#E74C3C', 2:'#E67E22', 3:'#27AE60', 4:'#2980B9', 5:'#8E44AD'}
 LEAFLET_COLORS = {1:'red', 2:'orange', 3:'green', 4:'blue', 5:'purple'}
 
+# Paleta de colores para capas KMZ (hasta 8 archivos simultáneos)
+COLORES_KMZ = [
+    '#E74C3C', '#2980B9', '#27AE60', '#F39C12',
+    '#8E44AD', '#16A085', '#D35400', '#2C3E50',
+]
+
 # =============================================================================
 # FUNCIONES AUXILIARES
 # =============================================================================
@@ -286,6 +295,430 @@ def exportar_excel(df_cercanas, lat, lon, nombre):
         info.to_excel(writer, sheet_name='Info Proyecto', index=False)
 
     return output.getvalue()
+
+
+# =============================================================================
+# =============================================================================
+# FUNCIONES KMZ / KML — MOTOR GIS ROBUSTO v3
+# Soporta: namespaces de cualquier herramienta, KMZ anidados sin limite,
+#          multiples Document, Document dentro de Folder, MultiGeometry,
+#          XML corrupto, proteccion ZIP bomb y memoria
+# =============================================================================
+
+MAX_FILE_MB         = 150
+MAX_UNCOMPRESSED_MB = 500
+MAX_FEATURES_RENDER = 5000
+PERU_BOUNDS = {'lat_min': -19.0, 'lat_max': 1.0,
+               'lon_min': -82.0, 'lon_max': -68.0}
+
+
+def kml_color_to_css(kml_color):
+    """Convierte color KML formato AABBGGRR a (#RRGGBB, opacidad 0.0-1.0)."""
+    try:
+        c = kml_color.strip().lstrip('#')
+        if len(c) == 6: c = 'ff' + c
+        if len(c) != 8: return '#3388ff', 0.8
+        aa = int(c[0:2], 16); bb = int(c[2:4], 16)
+        gg = int(c[4:6], 16); rr = int(c[6:8], 16)
+        return f'#{rr:02x}{gg:02x}{bb:02x}', round(aa / 255.0, 2)
+    except Exception:
+        return '#3388ff', 0.8
+
+
+def _strip_namespaces(kml_text):
+    """
+    Elimina TODOS los namespaces del XML antes de parsear.
+    Convierte <gx:Track> en <Track>, </kml:Document> en </Document>, etc.
+    Hace el parser completamente agnóstico a la herramienta de origen.
+    """
+    result = re.sub(r'\s+xmlns(:\w+)?="[^"]*"', '', kml_text)
+    result = re.sub(r'(</?)\w+:(\w)', r'\1\2', result)
+    return result
+
+
+def _decode_kml_bytes(raw_bytes):
+    """Detecta encoding y decodifica bytes a texto KML."""
+    for enc in ('utf-8-sig', 'utf-8', 'utf-16', 'latin-1'):
+        try:
+            return raw_bytes.decode(enc)
+        except (UnicodeDecodeError, LookupError):
+            continue
+    return raw_bytes.decode('utf-8', errors='replace')
+
+
+def _parse_coords_kml(coord_text):
+    """
+    Parsea texto de <coordinates> KML a lista de [lat, lon].
+    Formato KML: lon,lat,alt lon,lat,alt ...
+    Soporta coma decimal europea y separadores mixtos.
+    """
+    coords = []
+    texto = re.sub(r'[\t\r\n]+', ' ', coord_text.strip())
+    for token in texto.split():
+        partes = token.split(',')
+        if len(partes) >= 2:
+            try:
+                lon = float(partes[0])
+                lat = float(partes[1])
+                coords.append([lat, lon])
+            except ValueError:
+                continue
+    return coords
+
+
+def _coords_regex_fallback(kml_text):
+    """Extrae coordenadas por regex cuando el XML esta corrupto (ultimo recurso)."""
+    matches = re.findall(r'<coordinates[^>]*>(.*?)</coordinates>', kml_text, re.DOTALL)
+    all_coords = []
+    for m in matches:
+        all_coords.extend(_parse_coords_kml(m))
+    return all_coords
+
+
+def _validar_coords_peru(features):
+    """Revisa si las coordenadas estan dentro de los limites de Peru."""
+    invalidas = 0
+    for f in features:
+        for lat, lon in f.get('geom', []):
+            if not (PERU_BOUNDS['lat_min'] <= lat <= PERU_BOUNDS['lat_max'] and
+                    PERU_BOUNDS['lon_min'] <= lon <= PERU_BOUNDS['lon_max']):
+                invalidas += 1
+    return invalidas
+
+
+def parse_estilos_kml(root):
+    """
+    Extrae estilos KML del arbol XML (ya sin namespaces).
+    Retorna dict: '#styleId' -> {line_color, line_width, fill_color, fill_opacity, icon_color}
+    """
+    default_s = {'line_color': '#3388ff', 'line_width': 2,
+                 'fill_color': '#3388ff', 'fill_opacity': 0.35,
+                 'icon_color': '#E74C3C'}
+    estilos = {}
+
+    for style in root.iter('Style'):
+        sid = style.get('id', '').strip()
+        if not sid:
+            continue
+        s = dict(default_s)
+        line = style.find('.//LineStyle')
+        if line is not None:
+            c = (line.findtext('color') or '').strip()
+            w = (line.findtext('width') or '').strip()
+            if c: s['line_color'], _ = kml_color_to_css(c)
+            if w:
+                try: s['line_width'] = max(1.0, min(10.0, float(w)))
+                except ValueError: pass
+        poly = style.find('.//PolyStyle')
+        if poly is not None:
+            c = (poly.findtext('color') or '').strip()
+            f = (poly.findtext('fill') or '').strip()
+            if c: s['fill_color'], s['fill_opacity'] = kml_color_to_css(c)
+            if f == '0': s['fill_opacity'] = 0.0
+        icon = style.find('.//IconStyle')
+        if icon is not None:
+            c = (icon.findtext('color') or '').strip()
+            if c:
+                s['icon_color'], _ = kml_color_to_css(c)
+                s['line_color'] = s['icon_color']
+        estilos[f'#{sid}'] = s
+
+    for smap in root.iter('StyleMap'):
+        sid = smap.get('id', '').strip()
+        if not sid:
+            continue
+        for pair in smap.iter('Pair'):
+            key = (pair.findtext('key') or '').strip()
+            url = (pair.findtext('styleUrl') or '').strip()
+            if key == 'normal' and url and url in estilos:
+                estilos[f'#{sid}'] = estilos[url]
+                break
+
+    return estilos
+
+
+def _estilo_de_placemark(pm, estilos):
+    """Resuelve el estilo de un Placemark (url o inline)."""
+    default_s = {'line_color': '#3388ff', 'line_width': 2,
+                 'fill_color': '#3388ff', 'fill_opacity': 0.35,
+                 'icon_color': '#E74C3C'}
+    url = (pm.findtext('styleUrl') or '').strip()
+    if url and url in estilos:
+        return estilos[url]
+    inline = pm.find('Style')
+    if inline is not None:
+        tmp = parse_estilos_kml(inline)
+        if tmp:
+            return list(tmp.values())[0]
+    return default_s
+
+
+def _extraer_geometrias(pm):
+    """
+    Extrae TODAS las geometrias de un Placemark, incluyendo MultiGeometry.
+    Retorna lista de (tipo, coords).
+    """
+    geometrias = []
+
+    def _sacar_coords(elem_geo, tipo):
+        cel = elem_geo.find('.//coordinates')
+        if cel is not None and cel.text:
+            coords = _parse_coords_kml(cel.text)
+            if coords:
+                geometrias.append((tipo, coords))
+
+    mg = pm.find('.//MultiGeometry')
+    if mg is not None:
+        for sub in mg:
+            tag = sub.tag.lower()
+            if 'point' in tag:
+                _sacar_coords(sub, 'Punto')
+            elif 'linestring' in tag or 'linearring' in tag:
+                _sacar_coords(sub, 'Linea')
+            elif 'polygon' in tag:
+                _sacar_coords(sub, 'Poligono')
+        return geometrias
+
+    pt = pm.find('.//Point')
+    if pt is not None:
+        _sacar_coords(pt, 'Punto')
+        return geometrias
+
+    ls = pm.find('.//LineString')
+    if ls is not None:
+        _sacar_coords(ls, 'Linea')
+        return geometrias
+
+    pg = pm.find('.//Polygon')
+    if pg is not None:
+        outer = pg.find('.//outerBoundaryIs')
+        _sacar_coords(outer if outer is not None else pg, 'Poligono')
+        return geometrias
+
+    return geometrias
+
+
+def _placemark_to_features(pm, estilos):
+    """Convierte Placemark a lista de features (soporta MultiGeometry)."""
+    nombre = (pm.findtext('name') or 'Sin nombre').strip()
+    desc_raw = pm.findtext('description') or ''
+    desc = re.sub(r'<[^>]+>', ' ', desc_raw).strip()[:200]
+    est = _estilo_de_placemark(pm, estilos)
+    features = []
+    for tipo, coords in _extraer_geometrias(pm):
+        if not coords:
+            continue
+        if tipo == 'Punto':
+            centro = coords[0]
+        elif tipo == 'Poligono':
+            lats = [c[0] for c in coords]; lons = [c[1] for c in coords]
+            centro = [sum(lats)/len(lats), sum(lons)/len(lons)]
+        else:
+            centro = coords[len(coords) // 2]
+        features.append({'tipo': tipo, 'nombre': nombre, 'desc': desc,
+                         'centro': centro, 'geom': coords, **est})
+    return features
+
+
+def _detectar_networklinks(root):
+    """Detecta <NetworkLink> y retorna lista de URLs externas."""
+    urls = []
+    for nl in root.iter('NetworkLink'):
+        href = nl.findtext('.//href') or nl.findtext('href') or ''
+        if href.strip():
+            urls.append(href.strip())
+    return urls
+
+
+def _parse_scope(scope, estilos, nivel, padre_id):
+    """
+    Parsea recursivamente un Document o Folder.
+    Soporta: Folder, Document anidado, Placemarks sueltos, visibility=0.
+    """
+    capas = []
+    nombre_f = (scope.findtext('name') or f'Capa_{nivel}').strip()
+    capa_id = f"{padre_id}/{nombre_f}" if padre_id else nombre_f
+
+    placemarks = []
+    for pm in scope.findall('Placemark'):
+        placemarks.extend(_placemark_to_features(pm, estilos))
+
+    overlays = []
+    for tag in ('GroundOverlay', 'PhotoOverlay', 'ScreenOverlay'):
+        for go in scope.findall(tag):
+            overlays.append((go.findtext('name') or tag).strip())
+
+    color_dom = placemarks[0].get('line_color', '#888888') if placemarks else '#888888'
+    capas.append({
+        'id': capa_id, 'nombre': nombre_f, 'nivel': nivel,
+        'features': placemarks, 'overlays': overlays, 'color_dom': color_dom,
+        'n_puntos':    sum(1 for f in placemarks if f['tipo'] == 'Punto'),
+        'n_lineas':    sum(1 for f in placemarks if f['tipo'] == 'Linea'),
+        'n_poligonos': sum(1 for f in placemarks if f['tipo'] == 'Poligono'),
+        'total': len(placemarks),
+    })
+
+    for sub in scope.findall('Folder'):
+        capas.extend(_parse_scope(sub, estilos, nivel + 1, capa_id))
+
+    for sub_doc in scope.findall('Document'):
+        capas.extend(_parse_scope(sub_doc, estilos, nivel + 1, capa_id))
+
+    return capas
+
+
+def parse_kml_carpetas(kml_text):
+    """
+    Parser KML principal. Agnóstico a namespace, soporta XML corrupto,
+    múltiples Document, Document dentro de Folder y MultiGeometry.
+    """
+    kml_clean = _strip_namespaces(kml_text)
+
+    try:
+        root = ET.fromstring(kml_clean.encode('utf-8'))
+    except ET.ParseError:
+        kml_clean2 = re.sub(r'&(?!amp;|lt;|gt;|quot;|apos;|#)', '&amp;', kml_clean)
+        try:
+            root = ET.fromstring(kml_clean2.encode('utf-8'))
+        except ET.ParseError:
+            coords_rescue = _coords_regex_fallback(kml_text)
+            if coords_rescue:
+                return [{'id': '__rescue__',
+                         'nombre': 'Elementos recuperados (XML corrupto)',
+                         'nivel': 0, 'overlays': [], 'color_dom': '#E74C3C',
+                         'features': [{'tipo': 'Punto', 'nombre': f'Coord {i+1}',
+                                       'desc': '', 'centro': c, 'geom': [c],
+                                       'line_color': '#E74C3C', 'line_width': 2,
+                                       'fill_color': '#E74C3C', 'fill_opacity': 0.5,
+                                       'icon_color': '#E74C3C'}
+                                      for i, c in enumerate(coords_rescue)],
+                         'n_puntos': len(coords_rescue), 'n_lineas': 0,
+                         'n_poligonos': 0, 'total': len(coords_rescue)}]
+            return []
+
+    estilos = parse_estilos_kml(root)
+    networklinks = _detectar_networklinks(root)
+    capas = []
+
+    if root.tag == 'Document':
+        capas.extend(_parse_scope(root, estilos, nivel=0, padre_id=''))
+    else:
+        docs = root.findall('Document')
+        if not docs:
+            docs = root.findall('.//Document')
+        if docs:
+            for doc in docs:
+                capas.extend(_parse_scope(doc, estilos, nivel=0, padre_id=''))
+        else:
+            capas.extend(_parse_scope(root, estilos, nivel=0, padre_id=''))
+
+    if networklinks:
+        if capas:
+            capas[0]['_networklinks'] = networklinks
+        else:
+            capas.append({'id': '__netlinks__', 'nombre': 'NetworkLinks (externos)',
+                          'nivel': 0, 'features': [], 'overlays': [],
+                          'color_dom': '#F39C12', 'n_puntos': 0,
+                          'n_lineas': 0, 'n_poligonos': 0, 'total': 0,
+                          '_networklinks': networklinks})
+    return capas
+
+
+def _explorar_zip_recursivo(zip_bytes, nombre_zip, nivel=0):
+    """
+    Explora un ZIP/KMZ recursivamente sin limite de profundidad.
+    Soporta KMZ dentro de KMZ a cualquier nivel de anidamiento.
+    """
+    capas = []
+    try:
+        with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
+            total_bytes = sum(i.file_size for i in zf.infolist())
+            if total_bytes > MAX_UNCOMPRESSED_MB * 1024 * 1024:
+                return [{'id': f'__zipbomb_{nombre_zip}__',
+                         'nombre': f'BLOQUEADO: {nombre_zip} (descomprimido > {MAX_UNCOMPRESSED_MB}MB)',
+                         'nivel': nivel, 'features': [], 'overlays': [],
+                         'color_dom': '#E74C3C', 'n_puntos': 0,
+                         'n_lineas': 0, 'n_poligonos': 0, 'total': 0}]
+
+            nombres = [f for f in zf.namelist()
+                       if not any(f.startswith(p) for p in ('__MACOSX', '.'))
+                       and '/.' not in f]
+
+            kml_files = sorted([f for f in nombres if f.lower().endswith('.kml')],
+                               key=lambda x: (0 if 'doc.kml' in x.lower() else 1, x))
+            kmz_files = sorted([f for f in nombres if f.lower().endswith('.kmz')])
+
+            prefijo = os.path.splitext(os.path.basename(nombre_zip))[0]
+
+            for kml_name in kml_files:
+                kml_text = _decode_kml_bytes(zf.read(kml_name))
+                capas_kml = parse_kml_carpetas(kml_text)
+                if len(kml_files) > 1:
+                    sub = os.path.splitext(os.path.basename(kml_name))[0]
+                    for c in capas_kml:
+                        c['nombre'] = f"{sub} / {c['nombre']}"
+                elif nivel > 0:
+                    for c in capas_kml:
+                        c['nombre'] = f"{prefijo} / {c['nombre']}"
+                        c['nivel']  = c['nivel'] + nivel
+                capas.extend(capas_kml)
+
+            for kmz_name in kmz_files:
+                capas.extend(_explorar_zip_recursivo(zf.read(kmz_name), kmz_name, nivel + 1))
+
+    except zipfile.BadZipFile:
+        pass
+
+    return capas
+
+
+def escanear_kmz_v2(uploaded_file):
+    """Motor GIS central: entrada principal para KMZ/KML."""
+    fname = uploaded_file.name
+    raw   = uploaded_file.read()
+
+    size_mb = len(raw) / (1024 * 1024)
+    if size_mb > MAX_FILE_MB:
+        return [{'id': '__toolarge__',
+                 'nombre': f'ARCHIVO DEMASIADO GRANDE ({size_mb:.0f}MB > {MAX_FILE_MB}MB)',
+                 'nivel': 0, 'features': [], 'overlays': [],
+                 'color_dom': '#E74C3C', 'n_puntos': 0,
+                 'n_lineas': 0, 'n_poligonos': 0, 'total': 0}], fname
+
+    if fname.lower().endswith('.kmz'):
+        return _explorar_zip_recursivo(raw, fname, nivel=0), fname
+
+    try:
+        return parse_kml_carpetas(_decode_kml_bytes(raw)), fname
+    except Exception:
+        return [], fname
+
+
+def features_a_geojson(capas_dict):
+    """Convierte dict {nombre_capa: [features]} a GeoJSON FeatureCollection."""
+    import json
+    feats = []
+    for nombre_capa, feats_list in capas_dict.items():
+        for f in feats_list:
+            geom = f.get('geom', [])
+            tipo = f.get('tipo', '')
+            if tipo == 'Punto' and geom:
+                geometry = {"type": "Point", "coordinates": [geom[0][1], geom[0][0]]}
+            elif tipo == 'Linea' and len(geom) >= 2:
+                geometry = {"type": "LineString",
+                            "coordinates": [[c[1], c[0]] for c in geom]}
+            elif tipo == 'Poligono' and len(geom) >= 3:
+                geometry = {"type": "Polygon",
+                            "coordinates": [[[c[1], c[0]] for c in geom]]}
+            else:
+                continue
+            feats.append({"type": "Feature", "geometry": geometry,
+                          "properties": {"nombre": f.get('nombre', ''),
+                                         "capa": nombre_capa,
+                                         "desc": f.get('desc', '')}})
+    return json.dumps({"type": "FeatureCollection", "features": feats},
+                      ensure_ascii=False, indent=2)
+
 
 
 # =============================================================================
@@ -470,13 +903,14 @@ st.markdown("---")
 # =============================================================================
 # TABS PRINCIPALES
 # =============================================================================
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🗺️ Mapa Interactivo",
     "📊 Tabla de Estaciones",
     "🌧️ Análisis Climático",
     "📥 Exportar",
     "⛰️ Análisis DEM",
-    "🚨 Susceptibilidad"
+    "🚨 Susceptibilidad",
+    "📂 Capas KMZ / KML",
 ])
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -987,7 +1421,6 @@ with tab6:
         res_dem = st.session_state.dem_resultado
         dem_data_susc = res_dem["dem_data"]
 
-        # ── Precipitación (de estación SENAMHI o manual) ─────────────────
         st.markdown("##### Parámetros del modelo")
         col_p1, col_p2 = st.columns([2, 3])
         with col_p1:
@@ -1007,7 +1440,6 @@ with tab6:
                 f"Dpto: {df.iloc[0]['dpto']}",
             )
 
-        # ── Pesos del modelo (avanzado) ───────────────────────────────────
         with st.expander("⚙️ Ajustar pesos del modelo (avanzado)"):
             st.markdown(
                 "Los pesos deben sumar **1.00**. "
@@ -1028,7 +1460,7 @@ with tab6:
                               use_container_width=True)
 
         susc_key = f"{lat:.4f}_{lon:.4f}_{precip_mm}_{w_pend}_{w_prec}_{w_elev}_{w_curv}_{res_dem.get('fuente_dem','')}"
-        if "susc_key"      not in st.session_state: st.session_state.susc_key      = None
+        if "susc_key"       not in st.session_state: st.session_state.susc_key       = None
         if "susc_resultado" not in st.session_state: st.session_state.susc_resultado = None
 
         if btn_susc or st.session_state.susc_key != susc_key:
@@ -1059,7 +1491,6 @@ with tab6:
             color_dom = susc_mod.CLASES_SUSCEPTIBILIDAD[clase_dom]["color"]
             area_alto = sum(stats_s[n]["area_km2"] for n in ["Alta", "Muy Alta"] if n in stats_s)
 
-            # ── Badge clase dominante ─────────────────────────────────────
             st.markdown(
                 f'<span style="background:{color_dom};color:white;padding:4px 14px;'
                 f'border-radius:12px;font-size:13px;font-weight:bold">'
@@ -1068,7 +1499,6 @@ with tab6:
             )
             st.markdown("")
 
-            # ── Métricas ──────────────────────────────────────────────────
             m1, m2, m3, m4 = st.columns(4)
             m1.metric("📊 Índice promedio",    f"{susc_data['indice_medio']:.2f} / 5.00")
             m2.metric("🔴 Área Alta+Muy Alta",  f"{area_alto:.2f} km²")
@@ -1082,14 +1512,11 @@ with tab6:
                 st.pyplot(fig_susc, use_container_width=True)
 
             st.markdown("---")
-
-            # ── Mapa Folium ───────────────────────────────────────────────
             st.markdown("##### Mapa interactivo de susceptibilidad")
             mapa_susc = res_s["mapa"]
             if mapa_susc:
                 from streamlit_folium import st_folium
                 st_folium(mapa_susc, width=None, height=500, returned_objects=[])
-
                 mapa_susc_html = mapa_susc._repr_html_()
                 st.download_button(
                     "⬇️ Descargar Mapa Susceptibilidad (HTML)",
@@ -1112,3 +1539,256 @@ with tab6:
 
 > Ref: CENEPRED — *Manual para la Evaluación de Riesgos originados por Movimientos en Masa*, 2da edición.
             """)
+
+# =============================================================================
+# =============================================================================
+# TAB 7 — VISOR KMZ / KML (Motor GIS Robusto v3)
+# =============================================================================
+with tab7:
+    st.markdown("#### Visor de Capas KMZ / KML")
+    st.caption(
+        "Sube un archivo KMZ o KML. Se mostrara el mismo arbol de capas que Google Earth Pro. "
+        "Soporta KMZ anidados, multiples capas y estilos originales."
+    )
+
+    uploaded_kmz = st.file_uploader(
+        "Archivo KMZ / KML",
+        type=["kmz", "kml"],
+        accept_multiple_files=False,
+        help=f"Max {MAX_FILE_MB}MB. Compatible con Google Earth Pro, QGIS, ArcGIS, AutoCAD Civil 3D.",
+        key="kmz_uploader_v2"
+    )
+
+    if 'kmz_v2_capas'     not in st.session_state: st.session_state.kmz_v2_capas     = []
+    if 'kmz_v2_nombre'    not in st.session_state: st.session_state.kmz_v2_nombre    = None
+    if 'kmz_v2_seleccion' not in st.session_state: st.session_state.kmz_v2_seleccion = {}
+
+    if uploaded_kmz is not None:
+        if st.session_state.kmz_v2_nombre != uploaded_kmz.name:
+            with st.spinner(f"Procesando {uploaded_kmz.name}..."):
+                capas_v2, fname_v2 = escanear_kmz_v2(uploaded_kmz)
+            st.session_state.kmz_v2_capas     = capas_v2
+            st.session_state.kmz_v2_nombre    = fname_v2
+            st.session_state.kmz_v2_seleccion = {c['id']: True for c in capas_v2}
+
+        capas  = st.session_state.kmz_v2_capas
+        nombre = st.session_state.kmz_v2_nombre or uploaded_kmz.name
+
+        if not capas:
+            st.warning("No se encontraron capas vectoriales. Verifica que el KMZ contenga marcas de posicion con coordenadas.")
+            with st.expander("Diagnostico del archivo", expanded=True):
+                import zipfile as _zf, io as _io
+                try:
+                    uploaded_kmz.seek(0)
+                    raw2 = uploaded_kmz.read()
+                    if uploaded_kmz.name.lower().endswith('.kmz'):
+                        with _zf.ZipFile(_io.BytesIO(raw2)) as _z:
+                            st.write("**Archivos dentro del KMZ:**", _z.namelist())
+                            kmls2 = [f for f in _z.namelist() if f.lower().endswith('.kml')]
+                            if kmls2:
+                                txt2 = _z.read(kmls2[0]).decode('utf-8', errors='replace')
+                                st.code(txt2[:800], language='xml')
+                    else:
+                        st.code(raw2.decode('utf-8', errors='replace')[:800], language='xml')
+                except Exception as _e:
+                    st.error(f"Error al leer: {_e}")
+        else:
+            # ── Metricas generales ────────────────────────────────────────────
+            total_overlays = sum(len(c['overlays']) for c in capas)
+            total_feats    = sum(c['total'] for c in capas)
+            total_nl       = sum(len(c.get('_networklinks', [])) for c in capas)
+
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("Carpetas",          len(capas))
+            m2.metric("Elementos vectoriales", total_feats)
+            m3.metric("Capas raster",      total_overlays)
+            m4.metric("NetworkLinks",       total_nl)
+
+            # ── Advertencias ─────────────────────────────────────────────────
+            if total_overlays > 0:
+                names_ov = [n for c in capas for n in c['overlays']]
+                st.warning(
+                    f"Capas raster detectadas (no renderizables en mapa web): "
+                    f"{', '.join(names_ov[:5])}{'...' if len(names_ov) > 5 else ''}. "
+                    "Exporta el KMZ como KML desde Google Earth Pro para visualizarlas."
+                )
+
+            if total_nl > 0:
+                all_nl = [url for c in capas for url in c.get('_networklinks', [])]
+                st.info(
+                    f"NetworkLinks detectados ({total_nl}): referencias a archivos externos "
+                    f"que no se descargan automaticamente. URLs: "
+                    f"{', '.join(all_nl[:3])}{'...' if len(all_nl) > 3 else ''}"
+                )
+
+            # ── Validacion geografica Peru ────────────────────────────────────
+            all_features = [f for c in capas for f in c['features']]
+            coords_invalidas = _validar_coords_peru(all_features)
+            if coords_invalidas > 0:
+                st.warning(
+                    f"{coords_invalidas} coordenadas fuera del rango geografico de Peru "
+                    f"(lat: {PERU_BOUNDS['lat_min']} a {PERU_BOUNDS['lat_max']}, "
+                    f"lon: {PERU_BOUNDS['lon_min']} a {PERU_BOUNDS['lon_max']}). "
+                    "Verifica el sistema de coordenadas del archivo."
+                )
+
+            if total_feats > MAX_FEATURES_RENDER:
+                st.warning(
+                    f"El archivo contiene {total_feats:,} elementos. "
+                    f"Se renderizaran solo los primeros {MAX_FEATURES_RENDER:,} para mantener el rendimiento del mapa."
+                )
+
+            # ── Arbol de capas con checkboxes ─────────────────────────────────
+            st.markdown("---")
+            st.markdown("##### Capas del archivo")
+
+            col_todas, col_ninguna = st.columns([1, 1])
+            with col_todas:
+                if st.button("Seleccionar todas", key="kmz_todas"):
+                    for c in capas:
+                        st.session_state.kmz_v2_seleccion[c['id']] = True
+                    st.rerun()
+            with col_ninguna:
+                if st.button("Deseleccionar todas", key="kmz_ninguna"):
+                    for c in capas:
+                        st.session_state.kmz_v2_seleccion[c['id']] = False
+                    st.rerun()
+
+            for c in capas:
+                indent  = " " * (c['nivel'] * 6)
+                dot_col = c['color_dom'] if c['color_dom'] != '#888888' else '#aaaaaa'
+                dot     = f"<span style='color:{dot_col};font-size:14px'>&#9679;</span>"
+                stats   = f"<span style='color:#888;font-size:11px'> &nbsp; {c['total']} elem"
+                if c['n_puntos']:   stats += f" | {c['n_puntos']} pts"
+                if c['n_lineas']:   stats += f" | {c['n_lineas']} lin"
+                if c['n_poligonos']: stats += f" | {c['n_poligonos']} pol"
+                if c['overlays']:   stats += f" | {len(c['overlays'])} raster"
+                if c.get('_networklinks'): stats += f" | {len(c['_networklinks'])} netlink"
+                stats += "</span>"
+                label_html = f"{indent}{dot} <b>{c['nombre']}</b>{stats}"
+
+                chk_col, lbl_col = st.columns([0.05, 0.95])
+                with lbl_col:
+                    st.markdown(label_html, unsafe_allow_html=True)
+                with chk_col:
+                    val = st.session_state.kmz_v2_seleccion.get(c['id'], True)
+                    st.session_state.kmz_v2_seleccion[c['id']] = st.checkbox(
+                        "", value=val, key=f"chk_{c['id']}", label_visibility="collapsed"
+                    )
+
+            # ── Mapa ─────────────────────────────────────────────────────────
+            capas_activas = [c for c in capas
+                             if st.session_state.kmz_v2_seleccion.get(c['id'], True)
+                             and c['features']]
+
+            if capas_activas:
+                st.markdown("---")
+                mapa_v2 = folium.Map(location=[-9.19, -75.0], zoom_start=6,
+                                     tiles='CartoDB positron')
+                bounds_pts = []
+                feats_rendered = 0
+
+                for c in capas_activas:
+                    if feats_rendered >= MAX_FEATURES_RENDER:
+                        break
+                    fg = folium.FeatureGroup(name=c['nombre'], show=True)
+                    for f in c['features']:
+                        if feats_rendered >= MAX_FEATURES_RENDER:
+                            break
+                        geom  = f['geom']
+                        tipo  = f['tipo']
+                        lc    = f.get('line_color', '#3388ff')
+                        lw    = f.get('line_width', 2)
+                        fc    = f.get('fill_color', '#3388ff')
+                        fo    = f.get('fill_opacity', 0.35)
+                        ic    = f.get('icon_color', '#E74C3C')
+                        popup = folium.Popup(
+                            f"<b>{f['nombre']}</b><br><i>{c['nombre']}</i>"
+                            + (f"<br>{f['desc']}" if f['desc'] else ''),
+                            max_width=260
+                        )
+                        if tipo == 'Punto' and geom:
+                            folium.CircleMarker(
+                                location=geom[0], radius=5, color=ic,
+                                fill=True, fill_color=ic, fill_opacity=0.9,
+                                popup=popup, tooltip=f['nombre']
+                            ).add_to(fg)
+                            bounds_pts.append(geom[0])
+                        elif tipo == 'Linea' and len(geom) >= 2:
+                            folium.PolyLine(
+                                geom, color=lc, weight=lw, opacity=0.85,
+                                popup=popup, tooltip=f['nombre']
+                            ).add_to(fg)
+                            bounds_pts.extend(geom[::max(1, len(geom)//10)])
+                        elif tipo == 'Poligono' and len(geom) >= 3:
+                            folium.Polygon(
+                                geom, color=lc, weight=lw,
+                                fill=True, fill_color=fc, fill_opacity=fo,
+                                popup=popup, tooltip=f['nombre']
+                            ).add_to(fg)
+                            bounds_pts.extend(geom[::max(1, len(geom)//10)])
+                        feats_rendered += 1
+                    fg.add_to(mapa_v2)
+
+                if bounds_pts:
+                    lats = [p[0] for p in bounds_pts]
+                    lons = [p[1] for p in bounds_pts]
+                    mapa_v2.fit_bounds([[min(lats), min(lons)], [max(lats), max(lons)]])
+
+                folium.LayerControl(collapsed=False).add_to(mapa_v2)
+                st_folium(mapa_v2, width=None, height=550, returned_objects=[])
+
+                # ── Inventario ────────────────────────────────────────────────
+                st.markdown("---")
+                st.markdown("##### Inventario de capas activas")
+                inv_data = [{'Capa': c['nombre'],
+                             'Nivel': c['nivel'],
+                             'Puntos': c['n_puntos'],
+                             'Lineas': c['n_lineas'],
+                             'Poligonos': c['n_poligonos'],
+                             'Total': c['total']}
+                            for c in capas_activas]
+                st.dataframe(inv_data, use_container_width=True, hide_index=True)
+
+                st.markdown("---")
+                st.markdown("##### Exportar capas activas")
+                cg, cm = st.columns(2)
+                with cg:
+                    feats_exp = {c['nombre']: c['features'] for c in capas_activas}
+                    st.download_button(
+                        "Descargar GeoJSON",
+                        data=features_a_geojson(feats_exp),
+                        file_name=f"capas_{nombre.lower().replace(' ','_')}.geojson",
+                        mime="application/geo+json",
+                        use_container_width=True
+                    )
+                with cm:
+                    st.download_button(
+                        "Descargar Mapa HTML",
+                        data=mapa_v2._repr_html_(),
+                        file_name=f"mapa_{nombre.lower().replace(' ','_')}.html",
+                        mime="text/html",
+                        use_container_width=True
+                    )
+            else:
+                st.info("Selecciona al menos una capa con elementos para visualizar el mapa.")
+
+    else:
+        st.markdown(
+            "<div style='background:#f0f7ff;border:2px dashed #aac4e8;border-radius:10px;"
+            "padding:28px;text-align:center;color:#4a6b8a;margin:12px 0'>"
+            "<div style='font-size:38px'>&#128194;</div>"
+            "<div style='font-size:15px;font-weight:bold;margin:8px 0'>"
+            "Arrastra tu archivo KMZ aqui</div>"
+            "<div style='font-size:12px;opacity:0.8'>"
+            "Se mostrara el mismo arbol de carpetas que en Google Earth Pro<br>"
+            "Compatible con Google Earth - QGIS - ArcGIS - AutoCAD Civil 3D"
+            "</div></div>",
+            unsafe_allow_html=True
+        )
+        st.markdown("---")
+        st.info(
+            "Tip: Google Earth Pro: clic derecho sobre la carpeta del proyecto "
+            "> Guardar lugar como > KMZ. Incluira todas las subcapas automaticamente."
+        )
+
